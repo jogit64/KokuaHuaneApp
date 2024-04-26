@@ -12,12 +12,21 @@ app = Flask(__name__)
 
 def ask_chatgpt(prompt):
     data = {
-        'model': "text-davinci-003",  # Vous pouvez choisir un autre modèle selon vos besoins et budget.
-        'prompt': prompt,
+        'model': "gpt-4-turbo",
+        'messages': [{'role': 'user', 'content': prompt}],
         'max_tokens': 150
     }
-    response = requests.post('https://api.openai.com/v1/completions', headers=headers, json=data)
-    return response.json()['choices'][0]['text'].strip()
+    response = requests.post('https://api.openai.com/v1/chat/completions', headers=headers, json=data)
+    json_response = response.json()
+    print("API Response:", json_response)  
+    if 'choices' in json_response and json_response['choices']:
+        return json_response['choices'][0]['message']['content'].strip()
+    else:
+        return "Error: Unexpected response from OpenAI API"
+
+
+
+
 
 @app.route('/', methods=['GET', 'POST'])
 def hello():
