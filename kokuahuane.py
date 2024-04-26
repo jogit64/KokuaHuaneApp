@@ -36,5 +36,15 @@ def hello():
         return render_template('index.html', question=question, response=response)
     return render_template('index.html', question=None, response=None)
 
+
+@app.route('/ask', methods=['POST'])
+def ask():
+    if request.method == 'POST':
+        question = request.json.get('question')  # Assurez-vous d'utiliser json.get pour récupérer les données JSON
+        response = ask_chatgpt(question)
+        return response
+
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
