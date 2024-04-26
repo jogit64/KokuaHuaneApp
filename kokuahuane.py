@@ -1,7 +1,8 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, jsonify
 import os
 import requests
 from flask_cors import CORS
+
 
 api_key = os.getenv('OPENAI_API_KEY')
 headers = {
@@ -39,12 +40,12 @@ def hello():
     return render_template('index.html', question=None, response=None)
 
 
-@app.route('/ask', methods=['POST'])
+app.route('/ask', methods=['POST'])
 def ask():
     if request.method == 'POST':
-        question = request.json.get('question')  # Assurez-vous d'utiliser json.get pour récupérer les données JSON
+        question = request.json.get('question')
         response = ask_chatgpt(question)
-        return response
+        return jsonify({'response': response})  # Renvoie la réponse encapsulée dans un objet JSON
 
 
 
