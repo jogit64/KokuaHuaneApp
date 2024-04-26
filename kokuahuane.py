@@ -40,12 +40,21 @@ def hello():
     return render_template('index.html', question=None, response=None)
 
 
-app.route('/ask', methods=['POST'])
+@app.route('/ask', methods=['POST', 'OPTIONS'])
 def ask():
+    if request.method == 'OPTIONS':
+        # Pour répondre à la requête préliminaire OPTIONS de CORS
+        response = make_response()
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+        return response
+
     if request.method == 'POST':
         question = request.json.get('question')
         response = ask_chatgpt(question)
-        return jsonify({'response': response})  # Renvoie la réponse encapsulée dans un objet JSON
+        return jsonify({'response': response})
+
 
 
 
