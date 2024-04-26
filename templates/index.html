@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>ChatGPT Interaction</title>
+</head>
+
+<body>
+    <h1>Welcome to KokuaHuane's ChatGPT Interface!</h1>
+    <form method="post">
+        <label for="question">Ask something:</label>
+        <input type="text" id="question" name="question" required>
+        <button type="submit">Ask ChatGPT</button>
+    </form>
+    {% if question %}
+    <h2>Question:</h2>
+    <p>{{ question }}</p>
+    <h2>Response:</h2>
+    <p>{{ response }}</p>
+    {% endif %}
+</body>
+
+</html>
