@@ -1,6 +1,7 @@
 from flask import Flask, request, render_template
 import os
 import requests
+from flask_cors import CORS
 
 api_key = os.getenv('OPENAI_API_KEY')
 headers = {
@@ -9,6 +10,7 @@ headers = {
 }
 
 app = Flask(__name__)
+CORS(app, supports_credentials=True, origins=['https://kokua.fr', 'https://www.kokua.fr'])
 
 def ask_chatgpt(prompt):
     data = {
