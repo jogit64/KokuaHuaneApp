@@ -25,10 +25,14 @@ app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
 jwt = JWTManager(app)
 
 # Configuration de CORS pour permettre les requêtes cross-origin.
+# Configuration de CORS pour permettre les requêtes cross-origin.
+# Configuration de CORS pour permettre les requêtes cross-origin.
 CORS(app, supports_credentials=True, resources={
     r"/ask": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]},
-    r"/login": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]}
+    r"/login": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]},
+    r"/register": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]}  # Ajout de la route register ici
 })
+
 
 # Modèle utilisateur pour SQLAlchemy.
 class User(db.Model):
