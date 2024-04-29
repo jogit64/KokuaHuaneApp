@@ -18,12 +18,13 @@ headers = {
 app = Flask(__name__)
 
 
-# Initialisation de Flask-Migrate
-migrate = Migrate(app, db)
 
 # Configuration de l'URI de la base de données à partir des variables d'environnement.
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL').replace("://", "ql://", 1)
 db = SQLAlchemy(app)
+
+# Initialisation de Flask-Migrate
+migrate = Migrate(app, db)
 
 # Configuration du secret pour JWT.
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
