@@ -17,7 +17,7 @@ headers = {
 app = Flask(__name__)
 
 # Configuration de l'URI de la base de données à partir des variables d'environnement.
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL').replace("://", "ql://", 1)
 db = SQLAlchemy(app)
 
 # Configuration du secret pour JWT.
