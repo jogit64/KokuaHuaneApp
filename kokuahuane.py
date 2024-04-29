@@ -80,13 +80,17 @@ def hello():
 @app.route('/register', methods=['POST', 'OPTIONS'])
 @cross_origin(origins=["https://kokua.fr", "https://www.kokua.fr"], supports_credentials=True)
 def register():
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
     try:
+        data = request.get_json()
+        username = data.get('username')
+        password = data.get('password')
+        if not username or not password:
+            return jsonify({"error": "Missing username or password"}), 400
+
         add_user(username, password)
         return jsonify({"message": "User created successfully"}), 201
     except Exception as e:
+        app.logger.error(f"Failed to register user: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 # Route pour le processus de connexion.
