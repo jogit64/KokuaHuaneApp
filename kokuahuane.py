@@ -7,6 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
 
+
 # Configuration de l'API pour la connexion à OpenAI.
 api_key = os.getenv('OPENAI_API_KEY')
 headers = {
@@ -20,7 +21,10 @@ app = Flask(__name__)
 
 
 # Configuration de l'URI de la base de données à partir des variables d'environnement.
+
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL').replace("://", "ql://", 1)
+
+
 db = SQLAlchemy(app)
 
 # Initialisation de Flask-Migrate
