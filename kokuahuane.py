@@ -5,6 +5,7 @@ from flask_cors import CORS, cross_origin
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_migrate import Migrate
 
 # Configuration de l'API pour la connexion à OpenAI.
 api_key = os.getenv('OPENAI_API_KEY')
@@ -15,6 +16,10 @@ headers = {
 
 # Initialisation de l'application Flask.
 app = Flask(__name__)
+
+
+# Initialisation de Flask-Migrate
+migrate = Migrate(app, db)
 
 # Configuration de l'URI de la base de données à partir des variables d'environnement.
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL').replace("://", "ql://", 1)
