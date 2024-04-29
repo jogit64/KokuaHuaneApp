@@ -1,7 +1,7 @@
 from flask import Flask, request, render_template, jsonify, make_response
 import os
 import requests
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -76,7 +76,9 @@ def hello():
     return render_template('index.html', question=None, response=None)
 
 # Route pour enregistrer un nouvel utilisateur.
-@app.route('/register', methods=['POST'])
+# Route pour enregistrer un nouvel utilisateur.
+@app.route('/register', methods=['POST', 'OPTIONS'])
+@cross_origin(origins=["https://kokua.fr", "https://www.kokua.fr"], supports_credentials=True)
 def register():
     data = request.get_json()
     username = data.get('username')
