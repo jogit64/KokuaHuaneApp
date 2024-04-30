@@ -86,7 +86,18 @@ def hello():
         return render_template('index.html', question=question, response=response)
     return render_template('index.html', question=None, response=None)
 
-# Route pour enregistrer un nouvel utilisateur.
+# Route pour connaitre la liste des utilisateurs.
+@app.route('/users', methods=['GET'])
+def list_users():
+    try:
+        users = User.query.all()  # Récupère tous les utilisateurs de la base de données
+        users_data = [{'id': user.id, 'username': user.username} for user in users]
+        return jsonify(users_data), 200
+    except Exception as e:
+        app.logger.error(f"Failed to fetch users: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
 # Route pour enregistrer un nouvel utilisateur.
 @app.route('/register', methods=['POST', 'OPTIONS'])
 @cross_origin(origins=["https://kokua.fr", "https://www.kokua.fr"], supports_credentials=True)
