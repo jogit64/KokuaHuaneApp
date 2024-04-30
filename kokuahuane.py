@@ -97,7 +97,6 @@ def list_users():
         app.logger.error(f"Failed to fetch users: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-
 # Route pour enregistrer un nouvel utilisateur.
 @app.route('/register', methods=['POST', 'OPTIONS'])
 @cross_origin(origins=["https://kokua.fr", "https://www.kokua.fr"], supports_credentials=True)
