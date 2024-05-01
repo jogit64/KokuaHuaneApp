@@ -47,20 +47,22 @@ CORS(app, supports_credentials=True, resources={
 # Modèle utilisateur pour SQLAlchemy.
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(255), nullable=False)  # Augmenté de 120 à 255
+    email = db.Column(db.String(120), unique=True, nullable=False)  # Assurez-vous que l'email est unique
+    password = db.Column(db.String(255), nullable=False)
+    display_name = db.Column(db.String(80), nullable=True)  # Pour le prénom ou pseudo affiché
 
-
+    
     # Méthode pour vérifier le mot de passe.
     def check_password(self, password):
         return check_password_hash(self.password, password)
 
 # Fonction pour ajouter un utilisateur à la base de données.
-def add_user(username, password):
+def add_user(email, password, display_name=None):
     hashed_password = generate_password_hash(password)
-    new_user = User(username=username, password=hashed_password)
+    new_user = User(email=email, password=hashed_password, display_name=display_name)
     db.session.add(new_user)
     db.session.commit()
+
 
 # Fonction pour interroger l'API ChatGPT d'OpenAI.
 def ask_chatgpt(prompt):
@@ -101,18 +103,26 @@ def list_users():
 @app.route('/register', methods=['POST', 'OPTIONS'])
 @cross_origin(origins=["https://kokua.fr", "https://www.kokua.fr"], supports_credentials=True)
 def register():
-    try:
-        data = request.get_json()
-        username = data.get('username')
-        password = data.get('password')
-        if not username or not password:
-            return jsonify({"error": "Missing username or password"}), 400
+    if request.method == 'OPTIONS':
+        return {}, 200
 
-        add_user(username, password)
-        return jsonify({"message": "User created successfully"}), 201
-    except Exception as e:
-        app.logger.error(f"Failed to register user: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+    display_name = data.get('display_name', '')  # Utiliser un display name facultatif
+
+    if not email or not password:
+        return jsonify({"error": "Missing email or password"}), 400
+
+    if User.query.filter_by(email=email).first():
+        return jsonify({"error": "Email already in use"}), 409
+
+    hashed_password = generate_password_hash(password)
+    new_user = User(email=email, password=hashed_password, display_name=display_name)
+    db.session.add(new_user)
+    db.session.commit()
+    return jsonify({"message": "User created successfully"}), 201
+
 
 # Route pour le processus de connexion.
 @app.route('/login', methods=['POST', 'OPTIONS'])
@@ -125,14 +135,18 @@ def login():
         return response
 
     if request.method == 'POST':
-        username = request.json.get('username')
+        email = request.json.get('email')  # Utiliser directement l'email pour l'authentification
         password = request.json.get('password')
-        user = User.query.filter_by(username=username).first()
+
+        # Recherche l'utilisateur par email
+        user = User.query.filter_by(email=email).first()
+        
         if user and user.check_password(password):
-            access_token = create_access_token(identity=username)
+            access_token = create_access_token(identity=user.email)  # Utiliser l'email dans le token JWT
             return jsonify(access_token=access_token), 200
         else:
             return jsonify({"msg": "Invalid credentials"}), 401
+
 
 # Route pour poser des questions via l'API, protégée par JWT.
 @app.route('/ask', methods=['POST', 'OPTIONS'])
