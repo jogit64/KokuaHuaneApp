@@ -143,7 +143,8 @@ def login():
         
         if user and user.check_password(password):
             access_token = create_access_token(identity=user.email)  # Utiliser l'email dans le token JWT
-            return jsonify(access_token=access_token), 200
+            return jsonify(access_token=access_token, displayName=user.display_name), 200
+            # return jsonify(access_token=access_token), 200
         else:
             return jsonify({"msg": "Invalid credentials"}), 401
 
