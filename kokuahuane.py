@@ -135,18 +135,20 @@ def login():
         return response
 
     if request.method == 'POST':
-        email = request.json.get('email')  # Utiliser directement l'email pour l'authentification
+        email = request.json.get('email')
         password = request.json.get('password')
 
-        # Recherche l'utilisateur par email
         user = User.query.filter_by(email=email).first()
         
-        if user and user.check_password(password):
-            access_token = create_access_token(identity=user.email)  # Utiliser l'email dans le token JWT
-            return jsonify(access_token=access_token, displayName=user.display_name), 200
-            # return jsonify(access_token=access_token), 200
-        else:
-            return jsonify({"msg": "Invalid credentials"}), 401
+        if user is None:
+            return jsonify({"msg": "Email non trouvé"}), 404  # Email not found
+
+        if not user.check_password(password):
+            return jsonify({"msg": "Mot de passe invalide"}), 401  # Invalid password
+
+        access_token = create_access_token(identity=user.email)
+        return jsonify(access_token=access_token, displayName=user.display_name), 200
+
 
 
 # Route pour poser des questions via l'API, protégée par JWT.
