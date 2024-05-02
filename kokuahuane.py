@@ -176,6 +176,19 @@ def ask():
 
 # ! EXTENSION DU PROJET ----------------------------------------------------------------------------------
 
+
+def is_development():
+    return os.getenv('FLASK_ENV') == 'development'
+
+# Utiliser jwt_required de façon conditionnelle
+def jwt_required_conditional(fn):
+    if is_development():
+        return fn
+    else:
+        return jwt_required()(fn)
+
+
+
 class PositiveEvent(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -189,7 +202,7 @@ class PositiveEvent(db.Model):
 
 # Route d'entrée pour le coaching pour poser des questions via l'API, protégée par JWT.
 @app.route('/process_input', methods=['POST', 'OPTIONS'])
-@jwt_required(optional=True)
+@jwt_required_conditional
 def process_input():
     if request.method == 'OPTIONS':
         return {}, 200
