@@ -29,7 +29,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL').replace("
 
 
 # Affichage de l'URI de la base de données pour vérification
-print("Database URI:", app.config['SQLALCHEMY_DATABASE_URI'])
+# print("Database URI:", app.config['SQLALCHEMY_DATABASE_URI'])
 
 db = SQLAlchemy(app)
 
