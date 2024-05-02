@@ -25,11 +25,12 @@ app = Flask(__name__)
 
 
 # Configuration de l'URI de la base de données à partir des variables d'environnement.
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL').replace("://", "ql://", 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL').replace("postgres://", "postgresql://", 1)
+
 
 
 # Affichage de l'URI de la base de données pour vérification
-# print("Database URI:", app.config['SQLALCHEMY_DATABASE_URI'])
+print("Database URI:", app.config['SQLALCHEMY_DATABASE_URI'])
 
 db = SQLAlchemy(app)
 
