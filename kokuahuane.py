@@ -202,14 +202,18 @@ class PositiveEvent(db.Model):
 
 # Route d'entrée pour le coaching pour poser des questions via l'API, protégée par JWT.
 @app.route('/process_input', methods=['POST', 'OPTIONS'])
-@jwt_required_conditional
+@jwt_required(optional=True)
 def process_input():
     if request.method == 'OPTIONS':
         return {}, 200
 
+    # Vérifie si un JWT est présent et valide
     current_user = get_jwt_identity()
-    text_input = request.json.get('text')
+    if not current_user:
+        # Gérer le cas où l'utilisateur n'est pas connecté mais l'API est appelée
+        return jsonify({"error": "No JWT found, user not authenticated"}), 401
 
+    text_input = request.json.get('text')
     if not text_input:
         return jsonify({"error": "No text provided"}), 400
 
@@ -222,6 +226,7 @@ def process_input():
         return handle_recall_intent(intent['content'], current_user)
     else:
         return jsonify({"error": "Unable to determine intent"}), 400
+
 
 
 
