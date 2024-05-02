@@ -28,13 +28,14 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL').replace("://", "ql://", 1)
 
 
+# Affichage de l'URI de la base de données pour vérification
+print("Database URI:", app.config['SQLALCHEMY_DATABASE_URI'])
+
 db = SQLAlchemy(app)
 
 # Initialisation de Flask-Migrate
 migrate = Migrate(app, db)
 
-# Affichage de l'URI de la base de données pour vérification
-print("Database URI:", app.config['SQLALCHEMY_DATABASE_URI'])
 
 
 # Configuration du secret pour JWT.
