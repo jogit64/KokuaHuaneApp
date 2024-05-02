@@ -177,18 +177,6 @@ def ask():
 # ! EXTENSION DU PROJET ----------------------------------------------------------------------------------
 
 
-def is_development():
-    return os.getenv('FLASK_ENV') == 'development'
-
-# Utiliser jwt_required de façon conditionnelle
-def jwt_required_conditional(fn):
-    if is_development():
-        return fn
-    else:
-        return jwt_required()(fn)
-
-
-
 class PositiveEvent(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -200,16 +188,38 @@ class PositiveEvent(db.Model):
 
 
 
+
+def is_development():
+    """Déterminer si l'application est en mode développement."""
+    return os.getenv('FLASK_ENV') == 'development'
+
+def jwt_optional(fn):
+    """Un décorateur personnalisé qui active jwt_required seulement en production."""
+    if is_development():
+        def wrapper(*args, **kwargs):
+            try:
+                verify_jwt_in_request(optional=True)
+            except Exception as e:
+                # En mode développement, ignorer l'exception de JWT manquant
+                print(f"JWT verification skipped: {e}")
+            return fn(*args, **kwargs)
+        return wrapper
+    else:
+        from flask_jwt_extended import jwt_required
+        return jwt_required()(fn)
+
+
+
 # Route d'entrée pour le coaching pour poser des questions via l'API, protégée par JWT.
 @app.route('/process_input', methods=['POST', 'OPTIONS'])
-@jwt_required_conditional
+@jwt_optional
 def process_input():
     if request.method == 'OPTIONS':
         return {}, 200
 
     current_user = get_jwt_identity()
     if not current_user:
-        # Gérer le cas où aucun JWT n'est trouvé et l'API est appelée
+        # Gérer le cas où l'utilisateur n'est pas authentifié mais l'API est appelée
         return jsonify({"error": "Aucun JWT trouvé, utilisateur non authentifié"}), 401
 
     text_input = request.json.get('text')
@@ -225,7 +235,6 @@ def process_input():
         return handle_recall_intent(intent['content'], current_user)
     else:
         return jsonify({"error": "Impossible de déterminer l'intention"}), 400
-
 
 
 
