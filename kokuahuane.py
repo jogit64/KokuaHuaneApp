@@ -194,18 +194,19 @@ def is_development():
     return os.getenv('FLASK_ENV') == 'development'
 
 def jwt_optional(fn):
-    """Un décorateur personnalisé qui active jwt_required seulement en production."""
+    """Un décorateur personnalisé qui n'exige pas de JWT en mode développement."""
+    from flask_jwt_extended import jwt_required
+
     if is_development():
         def wrapper(*args, **kwargs):
             try:
                 verify_jwt_in_request(optional=True)
             except Exception as e:
-                # En mode développement, ignorer l'exception de JWT manquant
+                # En mode développement, afficher un message d'erreur mais continuer
                 print(f"JWT verification skipped: {e}")
             return fn(*args, **kwargs)
         return wrapper
     else:
-        from flask_jwt_extended import jwt_required
         return jwt_required()(fn)
 
 
