@@ -241,7 +241,6 @@ def process_input():
 
 
 
-
 def interpret_intent(text):
     # Exemple simplifié, ici on pourrait avoir une logique plus complexe pour déterminer l'action
     if "ajoute à mon journal" in text or "note que" in text:
