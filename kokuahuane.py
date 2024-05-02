@@ -219,21 +219,22 @@ def process_input():
         return {}, 200
 
     current_user = get_jwt_identity()
-    if not current_user:
-        # Gérer le cas où l'utilisateur n'est pas authentifié mais l'API est appelée
-        return jsonify({"error": "Aucun JWT trouvé, utilisateur non authentifié"}), 401
-
+    
+    # Ici, si current_user est None, on peut toujours continuer le traitement
+    # en fournissant un ID d'utilisateur par défaut en développement.
     text_input = request.json.get('text')
     if not text_input:
         return jsonify({"error": "Aucun texte fourni"}), 400
 
-    # Traiter le texte pour interpréter l'intention
     intent = interpret_intent(text_input)
     
+    # Utiliser un user_id fictif, assurez-vous que cet ID existe dans votre DB ou est géré proprement
+    user_id = current_user if current_user is not None else 1
+    
     if intent['action'] == 'record':
-        return handle_record_intent(intent['content'], current_user)
+        return handle_record_intent(intent['content'], user_id)
     elif intent['action'] == 'recall':
-        return handle_recall_intent(intent['content'], current_user)
+        return handle_recall_intent(intent['content'], user_id)
     else:
         return jsonify({"error": "Impossible de déterminer l'intention"}), 400
 
