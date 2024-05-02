@@ -6,6 +6,10 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
+from dotenv import load_dotenv
+from datetime import datetime
+
+load_dotenv() 
 
 
 # Configuration de l'API pour la connexion à OpenAI.
@@ -21,21 +25,23 @@ app = Flask(__name__)
 
 
 # Configuration de l'URI de la base de données à partir des variables d'environnement.
-
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL').replace("://", "ql://", 1)
- 
+
 
 db = SQLAlchemy(app)
 
 # Initialisation de Flask-Migrate
 migrate = Migrate(app, db)
 
+# Affichage de l'URI de la base de données pour vérification
+print("Database URI:", app.config['SQLALCHEMY_DATABASE_URI'])
+
+
 # Configuration du secret pour JWT.
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
 jwt = JWTManager(app)
 
-# Configuration de CORS pour permettre les requêtes cross-origin.
-# Configuration de CORS pour permettre les requêtes cross-origin.
+
 # Configuration de CORS pour permettre les requêtes cross-origin.
 CORS(app, supports_credentials=True, resources={
     r"/ask": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]},
@@ -51,7 +57,7 @@ class User(db.Model):
     password = db.Column(db.String(255), nullable=False)
     display_name = db.Column(db.String(80), nullable=True)  # Pour le prénom ou pseudo affiché
 
-    
+
     # Méthode pour vérifier le mot de passe.
     def check_password(self, password):
         return check_password_hash(self.password, password)
@@ -139,7 +145,7 @@ def login():
         password = request.json.get('password')
 
         user = User.query.filter_by(email=email).first()
-        
+
         if user is None:
             return jsonify({"msg": "Email non trouvé"}), 404  # Email not found
 
@@ -162,6 +168,78 @@ def ask():
     question = request.json.get('question')
     response = ask_chatgpt(question)
     return jsonify(logged_in_as=current_user, response=response)
+
+
+
+
+# ! EXTENSION DU PROJET ----------------------------------------------------------------------------------
+
+class PositiveEvent(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    description = db.Column(db.String(500), nullable=False)
+    category = db.Column(db.String(100), nullable=True, default='souvenir')  # Default à 'souvenir'
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref=db.backref('positive_events', lazy=True))
+
+
+
+# Route d'entrée pour le coaching pour poser des questions via l'API, protégée par JWT.
+@app.route('/process_input', methods=['POST', 'OPTIONS'])
+@jwt_required(optional=True)
+def process_input():
+    if request.method == 'OPTIONS':
+        return {}, 200
+
+    current_user = get_jwt_identity()
+    text_input = request.json.get('text')
+
+    if not text_input:
+        return jsonify({"error": "No text provided"}), 400
+
+    # Envoi du texte à ChatGPT pour interprétation de l'intention
+    intent = interpret_intent(text_input)
+
+    if intent['action'] == 'record':
+        return handle_record_intent(intent['content'], current_user)
+    elif intent['action'] == 'recall':
+        return handle_recall_intent(intent['content'], current_user)
+    else:
+        return jsonify({"error": "Unable to determine intent"}), 400
+
+
+
+
+def interpret_intent(text):
+    # Exemple simplifié, ici on pourrait avoir une logique plus complexe pour déterminer l'action
+    if "ajoute à mon journal" in text or "note que" in text:
+        return {'action': 'record', 'content': text}
+    elif "qu'est-ce que j'ai fait" in text or "rappelle-moi" in text:
+        return {'action': 'recall', 'content': text}
+    return {'action': 'unknown'}
+
+
+
+def handle_record_intent(content, user_id):
+    # Ajoute l'événement à la base de données
+    new_event = PositiveEvent(user_id=user_id, description=content)
+    db.session.add(new_event)
+    db.session.commit()
+    return jsonify({"message": "Event recorded successfully"}), 201
+
+
+
+def handle_recall_intent(content, user_id):
+    # Récupère les événements de la base de données basés sur l'intention analysée
+    events = PositiveEvent.query.filter_by(user_id=user_id).order_by(PositiveEvent.date.desc()).limit(30)
+    events_list = [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]
+    return jsonify(events_list), 200
+
+
+
+
+
 
 # Démarrage de l'application Flask.
 if __name__ == '__main__':
