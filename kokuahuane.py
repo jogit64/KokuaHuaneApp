@@ -2,7 +2,7 @@ from flask import Flask, request, render_template, jsonify, make_response
 import os
 import requests
 from flask_cors import CORS, cross_origin
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, verify_jwt_in_request
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
@@ -202,30 +202,30 @@ class PositiveEvent(db.Model):
 
 # Route d'entrée pour le coaching pour poser des questions via l'API, protégée par JWT.
 @app.route('/process_input', methods=['POST', 'OPTIONS'])
-@jwt_required(optional=True)
+@jwt_required_conditional
 def process_input():
     if request.method == 'OPTIONS':
         return {}, 200
 
-    # Vérifie si un JWT est présent et valide
     current_user = get_jwt_identity()
     if not current_user:
-        # Gérer le cas où l'utilisateur n'est pas connecté mais l'API est appelée
-        return jsonify({"error": "No JWT found, user not authenticated"}), 401
+        # Gérer le cas où aucun JWT n'est trouvé et l'API est appelée
+        return jsonify({"error": "Aucun JWT trouvé, utilisateur non authentifié"}), 401
 
     text_input = request.json.get('text')
     if not text_input:
-        return jsonify({"error": "No text provided"}), 400
+        return jsonify({"error": "Aucun texte fourni"}), 400
 
-    # Envoi du texte à ChatGPT pour interprétation de l'intention
+    # Traiter le texte pour interpréter l'intention
     intent = interpret_intent(text_input)
-
+    
     if intent['action'] == 'record':
         return handle_record_intent(intent['content'], current_user)
     elif intent['action'] == 'recall':
         return handle_recall_intent(intent['content'], current_user)
     else:
-        return jsonify({"error": "Unable to determine intent"}), 400
+        return jsonify({"error": "Impossible de déterminer l'intention"}), 400
+
 
 
 
