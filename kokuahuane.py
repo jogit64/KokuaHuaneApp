@@ -291,7 +291,7 @@ def ask_chatgpt(prompt, config_type):
 @app.route('/interact', methods=['POST'])
 @jwt_required()
 def interact():
-    user_id = get_jwt_identity()
+    user_email = get_jwt_identity()
     user = User.query.filter_by(email=user_email).first()
 
     if not user:
