@@ -291,14 +291,19 @@ def ask_chatgpt(prompt, config_type):
 @app.route('/interact', methods=['POST'])
 @jwt_required()
 def interact():
-    user_input = request.json.get('question', '')
     user_id = get_jwt_identity()
+    user = User.query.filter_by(email=user_email).first()
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    
+    user_input = request.json.get('question', '')
 
     chat_response = ask_chatgpt(user_input, 'default')
 
     if "record" in chat_response:
         description = chat_response.split("description:")[1].strip() if "description:" in chat_response else ""
-        new_event = PositiveEvent(user_id=user_id, description=description)
+        new_event = PositiveEvent(user_id=user.id, description=description) 
         db.session.add(new_event)
         db.session.commit()
         return jsonify({"response": "Event recorded successfully"})
