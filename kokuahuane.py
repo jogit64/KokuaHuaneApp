@@ -298,23 +298,29 @@ def interact():
         return jsonify({"error": "User not found"}), 404
     
     user_input = request.json.get('question', '')
-
     chat_response = ask_chatgpt(user_input, 'default')
+    app.logger.debug("Réponse ChatGPT : %s", chat_response)  # Log pour voir la réponse complète
+    
+    # Utiliser une expression régulière pour extraire la description de manière plus fiable
+    description = extract_description(chat_response)
+    app.logger.debug("Description extraite : %s", description)  # Log pour la description extraite
 
-    if "record" in chat_response:
-        description = chat_response.split("description:")[1].strip() if "description:" in chat_response else ""
-        new_event = PositiveEvent(user_id=user.id, description=description) 
+    if "record" in chat_response and description:
+        new_event = PositiveEvent(user_id=user.id, description=description)
         db.session.add(new_event)
         db.session.commit()
-        return jsonify({"response": "Event recorded successfully"})
+        return jsonify({"response": "Événement enregistré avec succès"})
     elif "recall" in chat_response:
-        events = PositiveEvent.query.filter_by(user_id=user_id).order_by(PositiveEvent.date.desc()).all()
+        events = PositiveEvent.query.filter_by(user_id=user.id).order_by(PositiveEvent.date.desc()).all()
         return jsonify({"response": [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]})
     else:
         return jsonify({"response": chat_response})
 
 def extract_description(chat_response):
-    return chat_response.split("description:")[1].strip() if "description:" in chat_response else ""
+    import re
+    match = re.search(r"description:\s*(.*)", chat_response)
+    return match.group(1).strip() if match else ""
+
 
 
 
