@@ -217,40 +217,6 @@ def jwt_optional(fn):
 @jwt_optional
 def process_input():
     if request.method == 'OPTIONS':
-        response = make_response()
-        response.headers.add('Access-Control-Allow-Origin', 'https://kokua.fr')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'POST,OPTIONS')
-        return response
-    
-    print("Received data:", request.json)
-
-    current_user = get_jwt_identity()
-    
-    # Ici, si current_user est None, on peut toujours continuer le traitement
-    # en fournissant un ID d'utilisateur par défaut en développement.
-    text_input = request.json.get('question')
-    if not text_input:
-        return jsonify({"error": "Aucun texte fourni"}), 400
-    
-    print("Processing for user:", current_user)
-
-    intent = interpret_intent(text_input)
-
-    print("Intent detected:", intent) 
-    
-    # Utiliser un user_id fictif, assurez-vous que cet ID existe dans votre DB ou est géré proprement
-    user_id = current_user if current_user is not None else 1
-    
-    if intent['action'] == 'record':
-        return handle_record_intent(intent['content'], user_id)
-    elif intent['action'] == 'recall':
-        return handle_recall_intent(intent['content'], user_id)
-    else:
-        return jsonify({"error": "Impossible de déterminer l'intention"}), 400@app.route('/process_input', methods=['POST', 'OPTIONS'])
-@jwt_optional
-def process_input():
-    if request.method == 'OPTIONS':
         # Préparation de la réponse aux requêtes préliminaires CORS
         response = make_response()
         response.headers.add('Access-Control-Allow-Origin', 'https://kokua.fr')
@@ -307,9 +273,6 @@ def handle_recall_intent(content, user_id):
     events = PositiveEvent.query.filter_by(user_id=user_id).order_by(PositiveEvent.date.desc()).limit(30)
     events_list = [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]
     return jsonify(events_list), 200
-
-
-
 
 
 
