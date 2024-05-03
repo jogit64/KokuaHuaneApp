@@ -222,7 +222,7 @@ def process_input():
     
     # Ici, si current_user est None, on peut toujours continuer le traitement
     # en fournissant un ID d'utilisateur par défaut en développement.
-    text_input = request.json.get('text')
+    text_input = request.json.get('question')
     if not text_input:
         return jsonify({"error": "Aucun texte fourni"}), 400
 
