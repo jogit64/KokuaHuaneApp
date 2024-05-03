@@ -222,6 +222,8 @@ def process_input():
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
         response.headers.add('Access-Control-Allow-Methods', 'POST,OPTIONS')
         return response
+    
+    print("Received data:", request.json)
 
     current_user = get_jwt_identity()
     
@@ -230,8 +232,12 @@ def process_input():
     text_input = request.json.get('question')
     if not text_input:
         return jsonify({"error": "Aucun texte fourni"}), 400
+    
+    print("Processing for user:", current_user)
 
     intent = interpret_intent(text_input)
+
+    print("Intent detected:", intent) 
     
     # Utiliser un user_id fictif, assurez-vous que cet ID existe dans votre DB ou est géré proprement
     user_id = current_user if current_user is not None else 1
