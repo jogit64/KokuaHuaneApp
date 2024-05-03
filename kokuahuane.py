@@ -253,33 +253,36 @@ def ask_chatgpt(prompt, config_type):
     with open('gpt_config.json', 'r') as config_file:
         config = json.load(config_file)[config_type]
     data = {
-        'model': config['model'],
+        'model': config.get('model'),
         'messages': [{'role': 'user', 'content': prompt}],
-        'max_tokens': config['max_tokens'],
-        'temperature': config['temperature'],
-        'top_p': config['top_p'],
-        'frequency_penalty': config['frequency_penalty'],
-        'presence_penalty': config['presence_penalty'],
-        'instructions': config['instructions']
+        'max_tokens': config.get('max_tokens', 150),
+        'temperature': config.get('temperature', 0.5),
+        'top_p': config.get('top_p', 1.0),
+        'frequency_penalty': config.get('frequency_penalty', 0.0),
+        'presence_penalty': config.get('presence_penalty', 0.0),
+        'instructions': config.get('instructions')
     }
-    response = requests.post('https://api.openai.com/v1/chat/completions', headers={'Authorization': f'Bearer {your_openai_api_key}', 'Content-Type': 'application/json'}, json=data)
+    headers = {
+        'Authorization': f'Bearer {os.environ.get("OPENAI_API_KEY")}',
+        'Content-Type': 'application/json'
+    }
+    response = requests.post('https://api.openai.com/v1/chat/completions', headers=headers, json=data)
     return response.json()['choices'][0]['message']['content'].strip()
 
 @app.route('/interact', methods=['POST'])
 @jwt_required()
 def interact():
     user_input = request.json.get('question', '')
-    user_id = get_jwt_identity()  # Assure-toi que l'ID utilisateur est envoyé avec la requête
+    user_id = get_jwt_identity()
 
-    # Utilise ChatGPT pour obtenir une réponse et identifier l'intention
     chat_response = ask_chatgpt(user_input, 'default')
-    
+
     if "record" in chat_response:
-        description = extract_description(chat_response)
+        description = chat_response.split("description:")[1].strip() if "description:" in chat_response else ""
         new_event = PositiveEvent(user_id=user_id, description=description)
         db.session.add(new_event)
         db.session.commit()
-        return jsonify({"response": "Événement enregistré avec succès."})
+        return jsonify({"response": "Event recorded successfully"})
     elif "recall" in chat_response:
         events = PositiveEvent.query.filter_by(user_id=user_id).order_by(PositiveEvent.date.desc()).all()
         return jsonify({"response": [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]})
