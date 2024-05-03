@@ -1,4 +1,13 @@
 {
+  "default": {
+    "model": "gpt-4-turbo",
+    "temperature": 0.7,
+    "max_tokens": 150,
+    "instructions": "Identifie l'intention de l'utilisateur (record, recall, support) et réponds de manière appropriée.",
+    "top_p": 0.9,
+    "frequency_penalty": 0.0,
+    "presence_penalty": 0.0
+  },
   "support": {
     "model": "gpt-4-turbo",
     "temperature": 0.5,
