@@ -217,7 +217,11 @@ def jwt_optional(fn):
 @jwt_optional
 def process_input():
     if request.method == 'OPTIONS':
-        return {}, 200
+        response = make_response()
+        response.headers.add('Access-Control-Allow-Origin', 'https://kokua.fr')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'POST,OPTIONS')
+        return response
 
     current_user = get_jwt_identity()
     
