@@ -307,9 +307,19 @@ def interact():
 
     if "record" in chat_response and description:
         new_event = PositiveEvent(user_id=user.id, description=description)
-        db.session.add(new_event)
-        db.session.commit()
+        app.logger.debug("Tentative d'enregistrement d'événement : user_id=%s, description=%s", user.id, description)
+
+
+        try:
+            db.session.add(new_event)
+            db.session.commit()
+            app.logger.debug("Événement enregistré avec succès")
+        except Exception as e:
+            app.logger.error("Erreur lors de l'enregistrement de l'événement: %s", str(e))
+            db.session.rollback()
+
         return jsonify({"response": "Événement enregistré avec succès"})
+    
     elif "recall" in chat_response:
         events = PositiveEvent.query.filter_by(user_id=user.id).order_by(PositiveEvent.date.desc()).all()
         return jsonify({"response": [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]})
