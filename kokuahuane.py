@@ -247,32 +247,63 @@ def process_input():
     elif intent['action'] == 'recall':
         return handle_recall_intent(intent['content'], user_id)
     else:
+        return jsonify({"error": "Impossible de déterminer l'intention"}), 400@app.route('/process_input', methods=['POST', 'OPTIONS'])
+@jwt_optional
+def process_input():
+    if request.method == 'OPTIONS':
+        # Préparation de la réponse aux requêtes préliminaires CORS
+        response = make_response()
+        response.headers.add('Access-Control-Allow-Origin', 'https://kokua.fr')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'POST,OPTIONS')
+        return response
+
+    # Récupération des données de la requête
+    print("Received data:", request.json)
+    text_input = request.json.get('question')
+    if not text_input:
+        return jsonify({"error": "Aucun texte fourni"}), 400
+    
+    # Identification de l'utilisateur via JWT
+    email = get_jwt_identity()
+    print("Processing for user:", email)
+    
+    # Vérification et récupération de l'ID utilisateur à partir de l'email
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        # Gestion de l'erreur si l'utilisateur n'est pas trouvé
+        return jsonify({"error": "Utilisateur non trouvé"}), 404
+    user_id = user.id
+
+    # Détermination de l'intention de l'utilisateur
+    intent = interpret_intent(text_input)
+    print("Intent detected:", intent)
+
+    # Traitement basé sur l'intention détectée
+    if intent['action'] == 'record':
+        return handle_record_intent(intent['content'], user_id)
+    elif intent['action'] == 'recall':
+        return handle_recall_intent(intent['content'], user_id)
+    else:
         return jsonify({"error": "Impossible de déterminer l'intention"}), 400
 
-
-
-
 def interpret_intent(text):
-    # Exemple simplifié, ici on pourrait avoir une logique plus complexe pour déterminer l'action
+    # Définition simple des intentions basées sur le texte
     if "ajoute à mon journal" in text or "note que" in text:
         return {'action': 'record', 'content': text}
     elif "qu'est-ce que j'ai fait" in text or "rappelle-moi" in text:
         return {'action': 'recall', 'content': text}
     return {'action': 'unknown'}
 
-
-
 def handle_record_intent(content, user_id):
-    # Ajoute l'événement à la base de données
+    # Enregistrement de l'événement dans la base de données
     new_event = PositiveEvent(user_id=user_id, description=content)
     db.session.add(new_event)
     db.session.commit()
     return jsonify({"message": "Event recorded successfully"}), 201
 
-
-
 def handle_recall_intent(content, user_id):
-    # Récupère les événements de la base de données basés sur l'intention analysée
+    # Rappel des événements de l'utilisateur
     events = PositiveEvent.query.filter_by(user_id=user_id).order_by(PositiveEvent.date.desc()).limit(30)
     events_list = [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]
     return jsonify(events_list), 200
