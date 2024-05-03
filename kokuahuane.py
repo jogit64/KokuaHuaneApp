@@ -48,7 +48,7 @@ jwt = JWTManager(app)
 CORS(app, supports_credentials=True, resources={
     r"/ask": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]},
     r"/login": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]},
-    r"/register": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]}  
+    r"/register": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]},  
      r"/process_input": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]} 
 })
 
