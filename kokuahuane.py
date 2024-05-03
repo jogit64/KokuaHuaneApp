@@ -255,16 +255,21 @@ def ask_chatgpt(prompt, config_type):
     with open(config_path, 'r') as config_file:
         config = json.load(config_file).get(config_type, {})
 
+    # Récupérer les instructions spécifiques du modèle
+    instructions = config.get('instructions', '')
+
+    # Concaténer les instructions avec le prompt utilisateur
+    full_prompt = f"{instructions} {prompt}"
+
     # Préparation de la requête à envoyer à OpenAI
     data = {
         'model': config.get('model', 'gpt-4-turbo'),  # Valeur par défaut si non spécifiée
-        'messages': [{'role': 'user', 'content': prompt}],
+        'messages': [{'role': 'user', 'content': full_prompt}],
         'max_tokens': config.get('max_tokens', 150),  # Valeur par défaut si non spécifiée
         'temperature': config.get('temperature', 0.5),  # Valeur par défaut si non spécifiée
         'top_p': config.get('top_p', 1.0),  # Valeur par défaut si non spécifiée
         'frequency_penalty': config.get('frequency_penalty', 0.0),  # Valeur par défaut si non spécifiée
         'presence_penalty': config.get('presence_penalty', 0.0),  # Valeur par défaut si non spécifiée
-        'instructions': config.get('instructions')  # Instructions spécifiques
     }
 
     # Envoi de la requête à OpenAI
