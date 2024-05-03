@@ -49,7 +49,7 @@ CORS(app, supports_credentials=True, resources={
     r"/ask": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]},
     r"/login": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]},
     r"/register": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]},  
-    r"/process_input": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]} 
+    r"/interact": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]} 
 })
 
 
@@ -74,19 +74,44 @@ def add_user(email, password, display_name=None):
 
 
 # Fonction pour interroger l'API ChatGPT d'OpenAI.
-def ask_chatgpt(prompt):
-    data = {
-        'model': "gpt-4-turbo",
-        'messages': [{'role': 'user', 'content': prompt}],
-        'max_tokens': 150
-    }
-    response = requests.post('https://api.openai.com/v1/chat/completions', headers=headers, json=data)
-    json_response = response.json()
-    print("API Response:", json_response)
-    if 'choices' in json_response and json_response['choices']:
-        return json_response['choices'][0]['message']['content'].strip()
-    else:
-        return "Error: Unexpected response from OpenAI API"
+# def ask_chatgpt(prompt):
+#     data = {
+#         'model': "gpt-4-turbo",
+#         'messages': [{'role': 'user', 'content': prompt}],
+#         'max_tokens': 150
+#     }
+#     response = requests.post('https://api.openai.com/v1/chat/completions', headers=headers, json=data)
+#     json_response = response.json()
+#     print("API Response:", json_response)
+#     if 'choices' in json_response and json_response['choices']:
+#         return json_response['choices'][0]['message']['content'].strip()
+#     else:
+#         return "Error: Unexpected response from OpenAI API"
+
+# def ask_chatgpt(prompt, config_type):
+#     # Chargement de la configuration du fichier JSON
+#     with open('gpt_config.json', 'r') as config_file:
+#         config_data = json.load(config_file)
+    
+#     config = config_data[config_type]
+    
+#     data = {
+#         'model': config['model'],
+#         'messages': [{'role': 'user', 'content': prompt}],
+#         'max_tokens': config['max_tokens'],
+#         'temperature': config['temperature'],
+#         'top_p': config['top_p'],
+#         'frequency_penalty': config['frequency_penalty'],
+#         'presence_penalty': config['presence_penalty'],
+#         'instructions': config['instructions']
+#     }
+#     response = requests.post('https://api.openai.com/v1/chat/completions', headers=headers, json=data)
+#     json_response = response.json()
+#     return json_response['choices'][0]['message']['content'].strip() if 'choices' in json_response else "Error: Unexpected response from OpenAI API"
+
+
+
+
 
 # Route racine pour afficher et répondre aux questions.
 @app.route('/', methods=['GET', 'POST'])
@@ -184,10 +209,7 @@ class PositiveEvent(db.Model):
     description = db.Column(db.String(500), nullable=False)
     category = db.Column(db.String(100), nullable=True, default='souvenir')  # Default à 'souvenir'
     date = db.Column(db.DateTime, default=datetime.utcnow)
-
     user = db.relationship('User', backref=db.backref('positive_events', lazy=True))
-
-
 
 
 def is_development():
@@ -211,68 +233,61 @@ def jwt_optional(fn):
         return jwt_required()(fn)
 
 
-
-# Route d'entrée pour le coaching pour poser des questions via l'API, protégée par JWT.
-@app.route('/process_input', methods=['POST', 'OPTIONS'])
-@jwt_optional
-def process_input():
-    if request.method == 'OPTIONS':
-        # Préparation de la réponse aux requêtes préliminaires CORS
-        response = make_response()
-        response.headers.add('Access-Control-Allow-Origin', 'https://kokua.fr')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'POST,OPTIONS')
-        return response
-
-    # Récupération des données de la requête
-    print("Received data:", request.json)
-    text_input = request.json.get('question')
-    if not text_input:
-        return jsonify({"error": "Aucun texte fourni"}), 400
-    
-    # Identification de l'utilisateur via JWT
-    email = get_jwt_identity()
-    print("Processing for user:", email)
-    
-    # Vérification et récupération de l'ID utilisateur à partir de l'email
-    user = User.query.filter_by(email=email).first()
-    if not user:
-        # Gestion de l'erreur si l'utilisateur n'est pas trouvé
-        return jsonify({"error": "Utilisateur non trouvé"}), 404
-    user_id = user.id
-
-    # Détermination de l'intention de l'utilisateur
-    intent = interpret_intent(text_input)
-    print("Intent detected:", intent)
-
-    # Traitement basé sur l'intention détectée
-    if intent['action'] == 'record':
-        return handle_record_intent(intent['content'], user_id)
-    elif intent['action'] == 'recall':
-        return handle_recall_intent(intent['content'], user_id)
-    else:
-        return jsonify({"error": "Impossible de déterminer l'intention"}), 400
-
-def interpret_intent(text):
-    # Définition simple des intentions basées sur le texte
-    if "ajoute à mon journal" in text or "note que" in text:
-        return {'action': 'record', 'content': text}
-    elif "qu'est-ce que j'ai fait" in text or "rappelle-moi" in text:
-        return {'action': 'recall', 'content': text}
-    return {'action': 'unknown'}
-
-def handle_record_intent(content, user_id):
-    # Enregistrement de l'événement dans la base de données
-    new_event = PositiveEvent(user_id=user_id, description=content)
+def record_event(user_id, description):
+    """Enregistre un événement positif dans la base de données."""
+    new_event = PositiveEvent(user_id=user_id, description=description)
     db.session.add(new_event)
     db.session.commit()
-    return jsonify({"message": "Event recorded successfully"}), 201
+    return "Événement enregistré avec succès."
 
-def handle_recall_intent(content, user_id):
-    # Rappel des événements de l'utilisateur
-    events = PositiveEvent.query.filter_by(user_id=user_id).order_by(PositiveEvent.date.desc()).limit(30)
-    events_list = [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]
-    return jsonify(events_list), 200
+def recall_events(user_id):
+    """Rappelle les événements positifs d'un utilisateur."""
+    events = PositiveEvent.query.filter_by(user_id=user_id).order_by(PositiveEvent.date.desc()).all()
+    return [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]
+
+
+
+# Fonction pour interroger l'API ChatGPT d'OpenAI.
+def ask_chatgpt(prompt, config_type):
+    with open('gpt_config.json', 'r') as config_file:
+        config = json.load(config_file)[config_type]
+    data = {
+        'model': config['model'],
+        'messages': [{'role': 'user', 'content': prompt}],
+        'max_tokens': config['max_tokens'],
+        'temperature': config['temperature'],
+        'top_p': config['top_p'],
+        'frequency_penalty': config['frequency_penalty'],
+        'presence_penalty': config['presence_penalty'],
+        'instructions': config['instructions']
+    }
+    response = requests.post('https://api.openai.com/v1/chat/completions', headers={'Authorization': f'Bearer {your_openai_api_key}', 'Content-Type': 'application/json'}, json=data)
+    return response.json()['choices'][0]['message']['content'].strip()
+
+@app.route('/interact', methods=['POST'])
+@jwt_required()
+def interact():
+    user_input = request.json.get('question', '')
+    user_id = get_jwt_identity()  # Assure-toi que l'ID utilisateur est envoyé avec la requête
+
+    # Utilise ChatGPT pour obtenir une réponse et identifier l'intention
+    chat_response = ask_chatgpt(user_input, 'default')
+    
+    if "record" in chat_response:
+        description = extract_description(chat_response)
+        new_event = PositiveEvent(user_id=user_id, description=description)
+        db.session.add(new_event)
+        db.session.commit()
+        return jsonify({"response": "Événement enregistré avec succès."})
+    elif "recall" in chat_response:
+        events = PositiveEvent.query.filter_by(user_id=user_id).order_by(PositiveEvent.date.desc()).all()
+        return jsonify({"response": [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]})
+    else:
+        return jsonify({"response": chat_response})
+
+def extract_description(chat_response):
+    return chat_response.split("description:")[1].strip() if "description:" in chat_response else ""
+
 
 
 
