@@ -250,24 +250,38 @@ def recall_events(user_id):
 
 # Fonction pour interroger l'API ChatGPT d'OpenAI.
 def ask_chatgpt(prompt, config_type):
-    with open('gpt_config.json', 'r') as config_file:
-        config = json.load(config_file)[config_type]
+    # Chemin vers le fichier de configuration relatif au répertoire de l'application
+    config_path = os.path.join(app.root_path, 'gpt_config.json')
+    with open(config_path, 'r') as config_file:
+        config = json.load(config_file).get(config_type, {})
+
+    # Préparation de la requête à envoyer à OpenAI
     data = {
-        'model': config.get('model'),
+        'model': config.get('model', 'gpt-4-turbo'),  # Valeur par défaut si non spécifiée
         'messages': [{'role': 'user', 'content': prompt}],
-        'max_tokens': config.get('max_tokens', 150),
-        'temperature': config.get('temperature', 0.5),
-        'top_p': config.get('top_p', 1.0),
-        'frequency_penalty': config.get('frequency_penalty', 0.0),
-        'presence_penalty': config.get('presence_penalty', 0.0),
-        'instructions': config.get('instructions')
+        'max_tokens': config.get('max_tokens', 150),  # Valeur par défaut si non spécifiée
+        'temperature': config.get('temperature', 0.5),  # Valeur par défaut si non spécifiée
+        'top_p': config.get('top_p', 1.0),  # Valeur par défaut si non spécifiée
+        'frequency_penalty': config.get('frequency_penalty', 0.0),  # Valeur par défaut si non spécifiée
+        'presence_penalty': config.get('presence_penalty', 0.0),  # Valeur par défaut si non spécifiée
+        'instructions': config.get('instructions')  # Instructions spécifiques
     }
+
+    # Envoi de la requête à OpenAI
     headers = {
         'Authorization': f'Bearer {os.environ.get("OPENAI_API_KEY")}',
         'Content-Type': 'application/json'
     }
     response = requests.post('https://api.openai.com/v1/chat/completions', headers=headers, json=data)
-    return response.json()['choices'][0]['message']['content'].strip()
+    
+    if response.status_code == 200:
+        return response.json()['choices'][0]['message']['content'].strip()
+    else:
+        # Journalisation des erreurs pour le débogage
+        app.logger.error('Failed to receive valid response from OpenAI: %s', response.text)
+        return "Error processing your request."
+
+
 
 @app.route('/interact', methods=['POST'])
 @jwt_required()
