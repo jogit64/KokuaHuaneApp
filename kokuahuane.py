@@ -9,6 +9,7 @@ from flask_migrate import Migrate
 from dotenv import load_dotenv
 from datetime import datetime
 import json
+import re
 
 load_dotenv() 
 
@@ -304,6 +305,8 @@ def interact():
     app.logger.debug("Réponse ChatGPT : %s", chat_response)  # Log pour voir la réponse complète
     
     # Utiliser une expression régulière pour extraire la description de manière plus fiable
+
+    app.logger.debug("ChatGPT full response: %s", chat_response)
     description = extract_description(chat_response)
     app.logger.debug("Description extraite : %s", description)  # Log pour la description extraite
 
@@ -328,8 +331,9 @@ def interact():
     else:
         return jsonify({"response": chat_response})
 
+
+
 def extract_description(chat_response):
-    import re
     match = re.search(r"description:\s*(.*)", chat_response)
     return match.group(1).strip() if match else ""
 
