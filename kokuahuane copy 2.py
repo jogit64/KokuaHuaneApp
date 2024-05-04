@@ -253,55 +253,89 @@ def recall_events(user_id):
 
 # Fonction pour interroger l'API ChatGPT d'OpenAI.
 def ask_chatgpt(prompt, config_type):
-    config = load_json_config(config_type)  # Charge la configuration appropriée
+    # Chemin vers le fichier de configuration relatif au répertoire de l'application
+    config_path = os.path.join(app.root_path, 'gpt_config.json')
+    with open(config_path, 'r') as config_file:
+        config = json.load(config_file).get(config_type, {})
+
+    # Récupérer les instructions spécifiques du modèle
+    instructions = config.get('instructions', '')
+
+    # Concaténer les instructions avec le prompt utilisateur
+    full_prompt = f"{instructions} {prompt}"
+
+    # Préparation de la requête à envoyer à OpenAI
     data = {
-        'model': config['model'],
-        'messages': [{'role': 'user', 'content': f"{config['instructions']} {prompt}"}],
-        'max_tokens': config['max_tokens']
+        'model': config.get('model', 'gpt-4-turbo'),  # Valeur par défaut si non spécifiée
+        'messages': [{'role': 'user', 'content': full_prompt}],
+        'max_tokens': config.get('max_tokens', 150),  # Valeur par défaut si non spécifiée
+        'temperature': config.get('temperature', 0.5),  # Valeur par défaut si non spécifiée
+        'top_p': config.get('top_p', 1.0),  # Valeur par défaut si non spécifiée
+        'frequency_penalty': config.get('frequency_penalty', 0.0),  # Valeur par défaut si non spécifiée
+        'presence_penalty': config.get('presence_penalty', 0.0),  # Valeur par défaut si non spécifiée
+    }
+
+    # Envoi de la requête à OpenAI
+    headers = {
+        'Authorization': f'Bearer {os.environ.get("OPENAI_API_KEY")}',
+        'Content-Type': 'application/json'
     }
     response = requests.post('https://api.openai.com/v1/chat/completions', headers=headers, json=data)
-    return response.json()['choices'][0]['message']['content'].strip() if response.status_code == 200 else "Error processing your request."
-
-def load_json_config(type):
-    with open('gpt_config.json', 'r') as file:
-        return json.load(file)[type]
-
+    
+    if response.status_code == 200:
+        return response.json()['choices'][0]['message']['content'].strip()
+    else:
+        # Journalisation des erreurs pour le débogage
+        app.logger.error('Failed to receive valid response from OpenAI: %s', response.text)
+        return "Error processing your request."
 
 
 
 @app.route('/interact', methods=['POST'])
 @jwt_required()
 def interact():
+    user_email = get_jwt_identity()
+    user = User.query.filter_by(email=user_email).first()
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    
     user_input = request.json.get('question', '')
-    user = get_jwt_identity()
+    chat_response = ask_chatgpt(user_input, 'default')
+    app.logger.debug("Réponse ChatGPT : %s", chat_response)  # Log pour voir la réponse complète
+    
+    # Utiliser une expression régulière pour extraire la description de manière plus fiable
 
-    # Première étape : Déterminer l'intention
-    intent = ask_chatgpt(user_input, "detect_intent")
+    app.logger.debug("ChatGPT full response: %s", chat_response)
+    description = extract_description(chat_response)
+    app.logger.debug("Description extraite : %s", description)  # Log pour la description extraite
 
-    if "enregistrer" in intent:
-        action_to_record = ask_chatgpt(user_input, "record")
-        response = record_event(user.id, action_to_record)
-    elif "rappel" in intent:
-        recall_query = ask_chatgpt(user_input, "recall")
-        response = recall_events(user.id, recall_query)
+    if "record" in chat_response and description:
+        new_event = PositiveEvent(user_id=user.id, description=description)
+        app.logger.debug("Tentative d'enregistrement d'événement : user_id=%s, description=%s", user.id, description)
+
+
+        try:
+            db.session.add(new_event)
+            db.session.commit()
+            app.logger.debug("Événement enregistré avec succès")
+        except Exception as e:
+            app.logger.error("Erreur lors de l'enregistrement de l'événement: %s", str(e))
+            db.session.rollback()
+
+        return jsonify({"response": "Événement enregistré avec succès"})
+    
+    elif "recall" in chat_response:
+        events = PositiveEvent.query.filter_by(user_id=user.id).order_by(PositiveEvent.date.desc()).all()
+        return jsonify({"response": [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]})
     else:
-        response = ask_chatgpt(user_input, "support")
+        return jsonify({"response": chat_response})
 
-    return jsonify({"response": response})
 
-def record_event(user_id, description):
-    if description:
-        new_event = PositiveEvent(user_id=user_id, description=description)
-        db.session.add(new_event)
-        db.session.commit()
-        return "Événement enregistré avec succès."
-    return "Aucune action spécifique reconnue pour l'enregistrement."
 
-def recall_events(user_id, query):
-    # Logique pour interroger la base de données basée sur 'query'
-    events = PositiveEvent.query.filter_by(user_id=user_id).all()
-    return ", ".join([f"{event.description} le {event.date.strftime('%Y-%m-%d')}" for event in events])
-
+def extract_description(chat_response):
+    match = re.search(r"description:\s*(.*)", chat_response)
+    return match.group(1).strip() if match else ""
 
 
 
