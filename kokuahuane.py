@@ -27,6 +27,8 @@ app = Flask(__name__)
 
 # Configuration de l'URI de la base de données à partir des variables d'environnement.
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL').replace("postgres://", "postgresql://", 1)
+app.config['DEBUG'] = True  # Active le mode debug, qui est utile pour le développement
+app.config['LOGGING_LEVEL'] = 'DEBUG'  # Définit le niveau de logging à debug pour voir plus de détails dans les logs
 
 
 
