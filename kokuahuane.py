@@ -279,28 +279,23 @@ def interact():
         return jsonify({"error": "User not found"}), 404
 
     user_input = request.json.get('question', '')
-    print("User input:", user_input)  # Log pour voir ce que l'utilisateur a saisi
-
     intent_response = ask_chatgpt(user_input, "detect_intent")
-    print("Intent response:", intent_response)  # Log pour voir la réponse de l'intention
 
+    # Décoder la réponse pour voir si elle implique explicitement une action à enregistrer
     if "enregistrer" in intent_response:
         action_to_record = ask_chatgpt(user_input, "record")
-        print("Action to record:", action_to_record)  # Log pour voir l'action à enregistrer
-        if action_to_record and action_to_record.strip() != "":
-            response = record_event(user.id, action_to_record)
+        if action_to_record and "action spécifique" in action_to_record:
+            response = record_event(user.id, action_to_record.split('"')[1])  # Supposer que l'action est entre guillemets
         else:
             response = "Aucune action spécifique n'a été identifiée pour l'enregistrement."
     elif "rappel" in intent_response:
         recall_query = ask_chatgpt(user_input, "recall")
         response = recall_events(user.id, recall_query)
-    elif "soutien" in intent_response:
-        response = ask_chatgpt(user_input, "support")
     else:
-        response = "Je n'ai pas pu déterminer votre intention. Pouvez-vous préciser ?"
+        response = intent_response  # Utiliser directement la réponse de ChatGPT comme soutien
 
-    print("Final response:", response)  # Log pour voir la réponse finale envoyée à l'utilisateur
     return jsonify({"response": response})
+
 
 
 
