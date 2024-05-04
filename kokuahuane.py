@@ -279,24 +279,27 @@ def interact():
         return jsonify({"error": "User not found"}), 404
 
     user_input = request.json.get('question', '')
-    # Première étape : Déterminer l'intention avec une analyse générale
+    # Interroger ChatGPT pour obtenir une analyse préliminaire de l'intention
     intent_response = ask_chatgpt(user_input, "detect_intent")
 
-    # Traitement en fonction de l'intention
+    # Extraire l'intention et la réponse prévue
     if "enregistrer" in intent_response:
-        action_to_record = ask_chatgpt(user_input, "record")
-        if action_to_record and "action spécifique" in action_to_record:
-            response = record_event(user.id, action_to_record.split('"')[1])  # Supposer que l'action est entre guillemets
+        action_response = ask_chatgpt(user_input, "record")
+        if action_response.lower().startswith("aucune action"):
+            response = action_response
         else:
-            response = "Aucune action spécifique n'a été identifiée pour l'enregistrement."
+            response = record_event(user.id, action_response)
     elif "rappel" in intent_response:
-        recall_query = ask_chatgpt(user_input, "recall")
-        response = recall_events(user.id, recall_query)
+        recall_response = ask_chatgpt(user_input, "recall")
+        response = recall_events(user.id, recall_response)
+    elif "soutien" in intent_response or "discuter" in intent_response:
+        support_response = ask_chatgpt(user_input, "support")
+        response = support_response
     else:
-        # Si ce n'est ni un enregistrement ni un rappel, on considère comme une discussion générale ou un besoin de soutien
-        response = ask_chatgpt(user_input, "support")  # Utilisation du modèle support pour répondre
+        response = "Je ne suis pas sûr de comment répondre à cela. Pouvez-vous préciser?"
 
     return jsonify({"response": response})
+
 
 
 
