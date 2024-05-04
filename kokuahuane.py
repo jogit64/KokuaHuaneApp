@@ -281,22 +281,23 @@ def interact():
     user_input = request.json.get('question', '')
     intent_response = ask_chatgpt(user_input, "detect_intent")
 
-    # Vérifier si l'intention inclut spécifiquement des mots clés pour enregistrer ou rappeler
+    # Assurez-vous que la réponse d'intention est claire et que les actions ne sont prises que si l'intention est confirmée.
     if "enregistrer" in intent_response:
         action_to_record = ask_chatgpt(user_input, "record")
-        if action_to_record:  # Assurez-vous que quelque chose de spécifique est retourné pour enregistrer
+        if action_to_record and action_to_record.strip() != "":
             response = record_event(user.id, action_to_record)
         else:
-            response = "Aucune action spécifique reconnue pour l'enregistrement."
+            response = "Aucune action spécifique n'a été identifiée pour l'enregistrement."
     elif "rappel" in intent_response:
-        period = extract_period(user_input)  # Extraire la période de la demande de rappel
-        response = recall_events(user.id, period)
-    elif "soutien" in intent_response or "support" in intent_response:
+        recall_query = ask_chatgpt(user_input, "recall")
+        response = recall_events(user.id, recall_query)
+    elif "soutien" in intent_response:
         response = ask_chatgpt(user_input, "support")
     else:
-        response = "Je n'ai pas compris votre demande. Pouvez-vous reformuler ?"
+        response = "Je n'ai pas pu déterminer votre intention. Pouvez-vous préciser ?"
 
     return jsonify({"response": response})
+
 
 
 
