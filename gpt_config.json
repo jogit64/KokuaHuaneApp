@@ -6,17 +6,21 @@
   },
   "record": {
     "model": "gpt-4-turbo",
-    "instructions": "Extrayez l'action spécifique que l'utilisateur souhaite enregistrer à partir de la demande.",
-    "max_tokens": 100
+    "instructions": "Décrivez brièvement l'action que l'utilisateur souhaite enregistrer, en une phrase concise. Ignorez les détails ou les explications supplémentaires.",
+    "max_tokens": 50,
+    "top_p": 1.0,
+    "temperature": 0.3
   },
   "recall": {
     "model": "gpt-4-turbo",
-    "instructions": "Identifiez les détails de la demande de rappel pour extraire les informations pertinentes de la base de données.",
-    "max_tokens": 100
+    "instructions": "Identifiez et fournissez un résumé des événements ou actions passés que l'utilisateur souhaite rappeler, en extrayant les informations pertinentes de la base de données. Concentrez-vous sur les dates et les détails spécifiques demandés.",
+    "max_tokens": 100,
+    "temperature": 0.5
   },
   "support": {
     "model": "gpt-4-turbo",
-    "instructions": "Fournissez une réponse soutenante et empathique à la demande générale de l'utilisateur.",
-    "max_tokens": 150
+    "instructions": "Répondez de manière empathique et soutenante, en fournissant des conseils ou des encouragements adaptés à la situation exprimée par l'utilisateur.",
+    "max_tokens": 100,
+    "temperature": 0.6
   }
 }
