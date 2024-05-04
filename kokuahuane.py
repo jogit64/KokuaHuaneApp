@@ -272,10 +272,13 @@ def load_json_config(type):
 @app.route('/interact', methods=['POST'])
 @jwt_required()
 def interact():
-    user_input = request.json.get('question', '')
-    user = get_jwt_identity()
+    user_email = get_jwt_identity()  # Récupération de l'email à partir du JWT
+    user = User.query.filter_by(email=user_email).first()  # Récupération de l'objet User
 
-    # Première étape : Déterminer l'intention
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    user_input = request.json.get('question', '')
     intent = ask_chatgpt(user_input, "detect_intent")
 
     if "enregistrer" in intent:
@@ -288,6 +291,9 @@ def interact():
         response = ask_chatgpt(user_input, "support")
 
     return jsonify({"response": response})
+
+
+
 
 def record_event(user_id, description):
     if description:
