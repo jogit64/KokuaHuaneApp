@@ -294,7 +294,6 @@ def interact():
 
 
 
-
 def record_event(user_id, description):
     if description:
         new_event = PositiveEvent(user_id=user_id, description=description)
@@ -321,6 +320,7 @@ def recall_events(user_id, period):
 
     events = PositiveEvent.query.filter_by(user_id=user_id, date=date_filter).all()
     return [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]
+
 
 
 
