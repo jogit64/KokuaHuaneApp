@@ -22,5 +22,14 @@
     "instructions": "Répondez de manière empathique et soutenante, en fournissant des conseils ou des encouragements adaptés à la situation exprimée par l'utilisateur.",
     "max_tokens": 800,
     "temperature": 0.6
+  },
+  "extract_period": {
+    "model": "gpt-4-turbo",
+    "instructions": "Déterminez la période (par exemple, 'hier', 'cette semaine', 'le mois dernier') à partir de la requête de l'utilisateur.",
+    "max_tokens": 50,
+    "temperature": 0.3,
+    "top_p": 1.0,
+    "frequency_penalty": 0.0,
+    "presence_penalty": 0.0
   }
 }

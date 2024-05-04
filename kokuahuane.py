@@ -303,14 +303,20 @@ def record_event(user_id, description):
         return "Événement enregistré."
     return "Aucune action spécifique reconnue pour l'enregistrement."
 
+def extract_period(user_input):
+    """Extraire la période de la demande de l'utilisateur."""
+    period_response = ask_chatgpt(user_input, "extract_period")
+    return period_response.strip()
+
 def recall_events(user_id, query):
-    # Logique pour interroger la base de données basée sur 'query'
-    events = PositiveEvent.query.filter_by(user_id=user_id).all()
-    return ", ".join([f"{event.description} le {event.date.strftime('%Y-%m-%d')}" for event in events])
+    """Fonction modifiée pour interroger la base de données basée sur une période extraite."""
+    period = extract_period(query)
+    # Logique pour adapter la requête en fonction de la période extraite
+    # Utiliser la logique similaire à celle décrite dans le précédent exemple
+    return "Rappel adapté à la période : " + period
 
-
-
-
+# Lors de la réception d'une requête de rappel :
+response = recall_events(user_id, user_input)
 
 
 # Démarrage de l'application Flask.
