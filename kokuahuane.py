@@ -279,18 +279,25 @@ def interact():
         return jsonify({"error": "User not found"}), 404
 
     user_input = request.json.get('question', '')
-    intent = ask_chatgpt(user_input, "detect_intent")
+    intent_response = ask_chatgpt(user_input, "detect_intent")
 
-    if "enregistrer" in intent:
+    # Vérifier si l'intention inclut spécifiquement des mots clés pour enregistrer ou rappeler
+    if "enregistrer" in intent_response:
         action_to_record = ask_chatgpt(user_input, "record")
-        response = record_event(user.id, action_to_record)
-    elif "rappel" in intent:
+        if action_to_record:  # Assurez-vous que quelque chose de spécifique est retourné pour enregistrer
+            response = record_event(user.id, action_to_record)
+        else:
+            response = "Aucune action spécifique reconnue pour l'enregistrement."
+    elif "rappel" in intent_response:
         period = extract_period(user_input)  # Extraire la période de la demande de rappel
         response = recall_events(user.id, period)
-    else:
+    elif "soutien" in intent_response or "support" in intent_response:
         response = ask_chatgpt(user_input, "support")
+    else:
+        response = "Je n'ai pas compris votre demande. Pouvez-vous reformuler ?"
 
     return jsonify({"response": response})
+
 
 
 
