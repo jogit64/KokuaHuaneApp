@@ -279,11 +279,14 @@ def interact():
         return jsonify({"error": "User not found"}), 404
 
     user_input = request.json.get('question', '')
-    intent_response = ask_chatgpt(user_input, "detect_intent")
+    print("User input:", user_input)  # Log pour voir ce que l'utilisateur a saisi
 
-    # Assurez-vous que la réponse d'intention est claire et que les actions ne sont prises que si l'intention est confirmée.
+    intent_response = ask_chatgpt(user_input, "detect_intent")
+    print("Intent response:", intent_response)  # Log pour voir la réponse de l'intention
+
     if "enregistrer" in intent_response:
         action_to_record = ask_chatgpt(user_input, "record")
+        print("Action to record:", action_to_record)  # Log pour voir l'action à enregistrer
         if action_to_record and action_to_record.strip() != "":
             response = record_event(user.id, action_to_record)
         else:
@@ -296,7 +299,9 @@ def interact():
     else:
         response = "Je n'ai pas pu déterminer votre intention. Pouvez-vous préciser ?"
 
+    print("Final response:", response)  # Log pour voir la réponse finale envoyée à l'utilisateur
     return jsonify({"response": response})
+
 
 
 
