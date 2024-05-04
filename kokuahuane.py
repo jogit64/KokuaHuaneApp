@@ -300,7 +300,7 @@ def record_event(user_id, description):
         new_event = PositiveEvent(user_id=user_id, description=description)
         db.session.add(new_event)
         db.session.commit()
-        return "Événement enregistré avec succès."
+        return "Événement enregistré."
     return "Aucune action spécifique reconnue pour l'enregistrement."
 
 def recall_events(user_id, query):
