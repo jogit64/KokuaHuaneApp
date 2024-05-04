@@ -253,14 +253,27 @@ def recall_events(user_id):
 
 # Fonction pour interroger l'API ChatGPT d'OpenAI.
 def ask_chatgpt(prompt, config_type):
-    config = load_json_config(config_type)  # Charge la configuration appropriée
+    """Interroger l'API ChatGPT avec des paramètres spécifiques définis dans un fichier de configuration JSON."""
+    # Charge la configuration appropriée pour le type demandé
+    with open('gpt_config.json', 'r') as file:
+        config = json.load(file)[config_type]
+
     data = {
         'model': config['model'],
         'messages': [{'role': 'user', 'content': f"{config['instructions']} {prompt}"}],
-        'max_tokens': config['max_tokens']
+        'max_tokens': config['max_tokens'],
+        'temperature': config.get('temperature', 1),  # Valeur par défaut si non spécifiée
+        'top_p': config.get('top_p', 1),  # Valeur par défaut si non spécifiée
+        'frequency_penalty': config.get('frequency_penalty', 0),  # Valeur par défaut
+        'presence_penalty': config.get('presence_penalty', 0)  # Valeur par défaut
     }
+
     response = requests.post('https://api.openai.com/v1/chat/completions', headers=headers, json=data)
-    return response.json()['choices'][0]['message']['content'].strip() if response.status_code == 200 else "Error processing your request."
+    if response.status_code == 200:
+        return response.json()['choices'][0]['message']['content'].strip()
+    else:
+        app.logger.error('Failed to receive valid response from OpenAI: %s', response.text)
+        return "Error processing your request."
 
 def load_json_config(type):
     with open('gpt_config.json', 'r') as file:
@@ -279,26 +292,24 @@ def interact():
         return jsonify({"error": "User not found"}), 404
 
     user_input = request.json.get('question', '')
-    # Interroger ChatGPT pour obtenir une analyse préliminaire de l'intention
+    # Utilisation du modèle pour détecter l'intention
     intent_response = ask_chatgpt(user_input, "detect_intent")
 
-    # Extraire l'intention et la réponse prévue
+    # Analyse de l'intention pour choisir le flux approprié
     if "enregistrer" in intent_response:
-        action_response = ask_chatgpt(user_input, "record")
-        if action_response.lower().startswith("aucune action"):
-            response = action_response
-        else:
-            response = record_event(user.id, action_response)
+        action_to_record = ask_chatgpt(user_input, "record")
+        response = record_event(user.id, action_to_record)
     elif "rappel" in intent_response:
-        recall_response = ask_chatgpt(user_input, "recall")
-        response = recall_events(user.id, recall_response)
-    elif "soutien" in intent_response or "discuter" in intent_response:
+        recall_query = ask_chatgpt(user_input, "recall")
+        response = recall_events(user.id, recall_query)
+    elif "soutien" in intent_response:
         support_response = ask_chatgpt(user_input, "support")
         response = support_response
     else:
         response = "Je ne suis pas sûr de comment répondre à cela. Pouvez-vous préciser?"
 
     return jsonify({"response": response})
+
 
 
 
