@@ -272,8 +272,8 @@ def load_json_config(type):
 @app.route('/interact', methods=['POST'])
 @jwt_required()
 def interact():
-    user_email = get_jwt_identity()  # Récupération de l'email à partir du JWT
-    user = User.query.filter_by(email=user_email).first()  # Récupération de l'objet User
+    user_email = get_jwt_identity()
+    user = User.query.filter_by(email=user_email).first()
 
     if not user:
         return jsonify({"error": "User not found"}), 404
@@ -285,8 +285,8 @@ def interact():
         action_to_record = ask_chatgpt(user_input, "record")
         response = record_event(user.id, action_to_record)
     elif "rappel" in intent:
-        recall_query = ask_chatgpt(user_input, "recall")
-        response = recall_events(user.id, recall_query)
+        period = extract_period(user_input)  # Extraire la période de la demande de rappel
+        response = recall_events(user.id, period)
     else:
         response = ask_chatgpt(user_input, "support")
 
@@ -303,20 +303,28 @@ def record_event(user_id, description):
         return "Événement enregistré."
     return "Aucune action spécifique reconnue pour l'enregistrement."
 
+
 def extract_period(user_input):
-    """Extraire la période de la demande de l'utilisateur."""
+    """Extrait la période de la demande de l'utilisateur."""
     period_response = ask_chatgpt(user_input, "extract_period")
     return period_response.strip()
 
-def recall_events(user_id, query):
-    """Fonction modifiée pour interroger la base de données basée sur une période extraite."""
-    period = extract_period(query)
-    # Logique pour adapter la requête en fonction de la période extraite
-    # Utiliser la logique similaire à celle décrite dans le précédent exemple
-    return "Rappel adapté à la période : " + period
+def recall_events(user_id, period):
+    """Rappelle les événements positifs d'un utilisateur pour une période donnée."""
+    if period == "aujourd'hui":
+        date_filter = datetime.utcnow().date()
+    elif period == "hier":
+        date_filter = datetime.utcnow().date() - timedelta(days=1)
+    else:
+        # Définir plus de conditions pour d'autres périodes si nécessaire
+        date_filter = datetime.utcnow().date()  # Exemple par défaut
 
-# Lors de la réception d'une requête de rappel :
-response = recall_events(user_id, user_input)
+    events = PositiveEvent.query.filter_by(user_id=user_id, date=date_filter).all()
+    return [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]
+
+
+
+
 
 
 # Démarrage de l'application Flask.
