@@ -35,5 +35,19 @@
     "top_p": 1.0,
     "frequency_penalty": 0.0,
     "presence_penalty": 0.0
+  },
+  "convert_date_range": {
+    "model": "gpt-4-turbo",
+    "instructions": "Convertissez les expressions de temps comme 'aujourd'hui', 'les deux derniers jours' ou 'ce mois-ci' en plages de dates formatées en 'YYYY-MM-DD'. Pour une seule date, retournez une seule valeur; pour une période, retournez les dates de début et de fin.",
+    "max_tokens": 40,
+    "temperature": 0.1,
+    "examples": [
+      { "input": "aujourd'hui", "output": "2023-05-07" },
+      {
+        "input": "les deux derniers jours",
+        "output": "2023-05-05 to 2023-05-07"
+      },
+      { "input": "ce mois-ci", "output": "2023-05-01 to 2023-05-31" }
+    ]
   }
 }
