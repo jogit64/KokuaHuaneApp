@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import json
 import re
+from dateutil.relativedelta import relativedelta
 
 load_dotenv() 
 
@@ -238,30 +239,6 @@ def jwt_optional(fn):
 
 
 
-@app.route('/interact', methods=['POST'])
-@jwt_required()
-def interact():
-    user_email = get_jwt_identity()  # Récupération de l'email à partir du JWT
-    user = User.query.filter_by(email=user_email).first()  # Récupération de l'objet User
-
-    if not user:
-        return jsonify({"error": "User not found"}), 404
-
-    user_input = request.json.get('question', '')
-    intent = ask_chatgpt(user_input, "detect_intent")
-
-    if "enregistrer" in intent:
-        action_to_record = ask_chatgpt(user_input, "record")
-        response = record_event(user.id, action_to_record)
-    elif "rappel" in intent:
-        recall_query = ask_chatgpt(user_input, "recall")
-        response = recall_events(user.id, recall_query)
-    else:
-        response = ask_chatgpt(user_input, "support")
-
-    return jsonify({"response": response})
-
-
 
 # Fonction pour interroger l'API ChatGPT d'OpenAI.
 def ask_chatgpt(prompt, config_type):
@@ -290,6 +267,37 @@ def ask_chatgpt(prompt, config_type):
 
 
 
+
+
+@app.route('/interact', methods=['POST'])
+@jwt_required()
+def interact():
+    user_email = get_jwt_identity()  # Récupération de l'email à partir du JWT
+    user = User.query.filter_by(email=user_email).first()  # Récupération de l'objet User
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    user_input = request.json.get('question', '')
+    intent = ask_chatgpt(user_input, "detect_intent")
+
+    if "enregistrer" in intent:
+        action_to_record = ask_chatgpt(user_input, "record")
+        response = record_event(user.id, action_to_record)
+
+    elif "rappel" in intent:
+        period_query = ask_chatgpt(user_input, "extract_period")
+        response = recall_events(user.id, period_query)
+
+
+    else:
+        response = ask_chatgpt(user_input, "support")
+
+    return jsonify({"response": response})
+
+
+
+
 def record_event(user_id, description):
     """Enregistre un événement positif dans la base de données."""
     new_event = PositiveEvent(user_id=user_id, description=description)
@@ -297,10 +305,16 @@ def record_event(user_id, description):
     db.session.commit()
     return "Événement enregistré avec succès."
 
-def recall_events(user_id):
-    """Rappelle les événements positifs d'un utilisateur."""
-    events = PositiveEvent.query.filter_by(user_id=user_id).order_by(PositiveEvent.date.desc()).all()
+def recall_events(user_id, period_query):
+    # Assumption: period_query returns something like "from 2021-01-01 to 2021-01-31"
+    dates = period_query.split(" to ")
+    start_date = datetime.strptime(dates[0], '%Y-%m-%d')
+    end_date = datetime.strptime(dates[1], '%Y-%m-%d')
+    events = PositiveEvent.query.filter(PositiveEvent.user_id == user_id, PositiveEvent.date.between(start_date, end_date)).order_by(PositiveEvent.date.desc()).all()
     return [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]
+
+
+
 
 
 

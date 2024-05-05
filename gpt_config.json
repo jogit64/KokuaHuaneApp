@@ -29,7 +29,7 @@
   },
   "extract_period": {
     "model": "gpt-4-turbo",
-    "instructions": "Déterminez la période (par exemple, 'hier', 'cette semaine', 'le mois dernier') à partir de la requête de l'utilisateur.",
+    "instructions": "Déterminez la période (par exemple, 'hier', 'cette semaine', 'le mois dernier') à partir de la requête de l'utilisateur et répondez sous forme de dates précises pour interroger une base de données.",
     "max_tokens": 50,
     "temperature": 0.3,
     "top_p": 1.0,
