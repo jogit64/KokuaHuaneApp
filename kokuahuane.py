@@ -307,13 +307,25 @@ def record_event(user_id, description):
 
 
 
+def handle_date_output(date_output):
+    # Vérifie si la sortie contient la structure "to" pour une plage de dates
+    if " to " in date_output:
+        start_date, end_date = date_output.split(" to ")
+    else:
+        # Si seule une date est fournie, utilisez-la comme date de début et de fin
+        start_date, end_date = date_output, date_output
+
+    return {"start": start_date, "end": end_date}
+
 def recall_events(user_id, date_output):
-    start_date, end_date = date_output.split(" to ")
+    # Utilisation de handle_date_output pour ajuster les dates d'entrée
+    date_range = handle_date_output(date_output)
     events = PositiveEvent.query.filter(
         PositiveEvent.user_id == user_id,
-        PositiveEvent.date.between(start_date, end_date)
+        PositiveEvent.date.between(date_range["start"], date_range["end"])
     ).order_by(PositiveEvent.date.desc()).all()
-    return [{"description": event.description, "date": event.date} for event in events]
+    return [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]
+
 
 
 
