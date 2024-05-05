@@ -312,13 +312,16 @@ def safe_parse_date(date_string):
 
 def recall_events(user_id, period_query):
     try:
-        # Using safe_parse_date to handle unexpected formats
+        print("Parsing date from period:", period_query)
         dates = [safe_parse_date(date) for date in period_query.split(" to ")]
+        print("Dates parsed:", dates)
         if None not in dates and len(dates) == 2:
             start_date, end_date = dates
             events = PositiveEvent.query.filter(PositiveEvent.user_id == user_id, PositiveEvent.date.between(start_date, end_date)).order_by(PositiveEvent.date.desc()).all()
+            print("Events found:", events)
             return [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]
         else:
+            print("Invalid date format in:", dates)
             return [{"error": "Invalid date format"}]
     except Exception as e:
         print("Error in recall_events:", e)
@@ -328,7 +331,9 @@ def recall_events(user_id, period_query):
 
 def extract_period(user_input):
     """Extrait la période de la demande de l'utilisateur."""
+    print("Extracting period with input:", user_input)
     period_response = ask_chatgpt(user_input, "extract_period")
+    print("Period extracted:", period_response)
     return period_response.strip()
 
 
