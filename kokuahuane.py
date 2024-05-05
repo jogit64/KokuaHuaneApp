@@ -237,17 +237,29 @@ def jwt_optional(fn):
         return jwt_required()(fn)
 
 
-def record_event(user_id, description):
-    """Enregistre un événement positif dans la base de données."""
-    new_event = PositiveEvent(user_id=user_id, description=description)
-    db.session.add(new_event)
-    db.session.commit()
-    return "Événement enregistré avec succès."
 
-def recall_events(user_id):
-    """Rappelle les événements positifs d'un utilisateur."""
-    events = PositiveEvent.query.filter_by(user_id=user_id).order_by(PositiveEvent.date.desc()).all()
-    return [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]
+@app.route('/interact', methods=['POST'])
+@jwt_required()
+def interact():
+    user_email = get_jwt_identity()  # Récupération de l'email à partir du JWT
+    user = User.query.filter_by(email=user_email).first()  # Récupération de l'objet User
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    user_input = request.json.get('question', '')
+    intent = ask_chatgpt(user_input, "detect_intent")
+
+    if "enregistrer" in intent:
+        action_to_record = ask_chatgpt(user_input, "record")
+        response = record_event(user.id, action_to_record)
+    elif "rappel" in intent:
+        recall_query = ask_chatgpt(user_input, "recall")
+        response = recall_events(user.id, recall_query)
+    else:
+        response = ask_chatgpt(user_input, "support")
+
+    return jsonify({"response": response})
 
 
 
@@ -275,81 +287,27 @@ def ask_chatgpt(prompt, config_type):
         app.logger.error('Failed to receive valid response from OpenAI: %s', response.text)
         return "Error processing your request."
 
-def load_json_config(type):
-    with open('gpt_config.json', 'r') as file:
-        return json.load(file)[type]
-
-
-
-
-@app.route('/interact', methods=['POST'])
-@jwt_required()
-def interact():
-    user_email = get_jwt_identity()
-    user = User.query.filter_by(email=user_email).first()
-
-    if not user:
-        return jsonify({"error": "User not found"}), 404
-
-    user_input = request.json.get('question', '')
-    # Utilisation du modèle pour détecter l'intention
-    intent_response = ask_chatgpt(user_input, "detect_intent")
-
-    # Analyse de l'intention pour choisir le flux approprié
-    if "enregistrer" in intent_response:
-        action_to_record = ask_chatgpt(user_input, "record")
-        response = record_event(user.id, action_to_record)
-    elif "rappel" in intent_response:
-        recall_query = ask_chatgpt(user_input, "recall")
-        response = recall_events(user.id, recall_query)
-    elif "soutien" in intent_response:
-        support_response = ask_chatgpt(user_input, "support")
-        response = support_response
-    else:
-        response = "Je ne suis pas sûr de comment répondre à cela. Pouvez-vous préciser?"
-
-    return jsonify({"response": response})
-
-
-
-
-
-
-
 
 
 
 def record_event(user_id, description):
-    if description:
-        new_event = PositiveEvent(user_id=user_id, description=description)
-        db.session.add(new_event)
-        db.session.commit()
-        return "Événement enregistré."
-    return "Aucune action spécifique reconnue pour l'enregistrement."
+    """Enregistre un événement positif dans la base de données."""
+    new_event = PositiveEvent(user_id=user_id, description=description)
+    db.session.add(new_event)
+    db.session.commit()
+    return "Événement enregistré avec succès."
+
+def recall_events(user_id):
+    """Rappelle les événements positifs d'un utilisateur."""
+    events = PositiveEvent.query.filter_by(user_id=user_id).order_by(PositiveEvent.date.desc()).all()
+    return [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]
+
 
 
 def extract_period(user_input):
     """Extrait la période de la demande de l'utilisateur."""
     period_response = ask_chatgpt(user_input, "extract_period")
     return period_response.strip()
-
-def recall_events(user_id, period):
-    """Rappelle les événements positifs d'un utilisateur pour une période donnée."""
-    if period == "aujourd'hui":
-        date_filter = datetime.utcnow().date()
-    elif period == "hier":
-        date_filter = datetime.utcnow().date() - timedelta(days=1)
-    else:
-        # Définir plus de conditions pour d'autres périodes si nécessaire
-        date_filter = datetime.utcnow().date()  # Exemple par défaut
-
-    events = PositiveEvent.query.filter_by(user_id=user_id, date=date_filter).all()
-    return [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]
-
-
-
-
-
 
 
 # Démarrage de l'application Flask.
