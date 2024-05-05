@@ -8,6 +8,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
 from dotenv import load_dotenv
 from datetime import datetime
+from dateutil import parser
 import json
 import re
 
@@ -302,24 +303,27 @@ def record_event(user_id, description):
     db.session.commit()
     return "Événement enregistré avec succès."
 
-def parse_date(date_str):
+def safe_parse_date(date_string):
     try:
-        return datetime.strptime(date_str.strip(), '%Y-%m-%d')
-    except ValueError:
-        # Log this error or handle it appropriately
-        return None  # or set a default date, or raise an error
+        return parser.parse(date_string, fuzzy=True)
+    except ValueError as e:
+        print("Failed to parse date:", e)
+        return None
 
 def recall_events(user_id, period_query):
     try:
-        dates = period_query.split(" to ")
-        start_date = datetime.strptime(dates[0], '%Y-%m-%d')
-        end_date = datetime.strptime(dates[1], '%Y-%m-%d')
-        events = PositiveEvent.query.filter(PositiveEvent.user_id == user_id, PositiveEvent.date.between(start_date, end_date)).order_by(PositiveEvent.date.desc()).all()
-        print("Events retrieved:", events)  # Ajout d'un log de débogage
-        return [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]
+        # Using safe_parse_date to handle unexpected formats
+        dates = [safe_parse_date(date) for date in period_query.split(" to ")]
+        if None not in dates and len(dates) == 2:
+            start_date, end_date = dates
+            events = PositiveEvent.query.filter(PositiveEvent.user_id == user_id, PositiveEvent.date.between(start_date, end_date)).order_by(PositiveEvent.date.desc()).all()
+            return [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]
+        else:
+            return [{"error": "Invalid date format"}]
     except Exception as e:
-        print("Error in recall_events:", e)  # Log des erreurs
-        return []
+        print("Error in recall_events:", e)
+        return [{"error": str(e)}]
+
 
 
 def extract_period(user_input):
