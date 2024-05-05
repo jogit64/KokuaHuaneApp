@@ -273,8 +273,8 @@ def ask_chatgpt(prompt, config_type):
 @app.route('/interact', methods=['POST'])
 @jwt_required()
 def interact():
-    user_email = get_jwt_identity()  # Récupération de l'email à partir du JWT
-    user = User.query.filter_by(email=user_email).first()  # Récupération de l'objet User
+    user_email = get_jwt_identity()
+    user = User.query.filter_by(email=user_email).first()
 
     if not user:
         return jsonify({"error": "User not found"}), 404
@@ -287,11 +287,14 @@ def interact():
         response = record_event(user.id, action_to_record)
     elif "rappel" in intent:
         period_query = ask_chatgpt(user_input, "extract_period")
-        response = recall_events(user.id, period_query)
+        date_output = extract_period(period_query)  # Ensure this is adjusted to handle responses properly
+        response = recall_events(user.id, date_output)
         return jsonify(response), 200
     else:
         response = ask_chatgpt(user_input, "support")
+
     return jsonify({"response": response})
+
 
 
 
