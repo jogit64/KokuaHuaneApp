@@ -326,6 +326,8 @@ def handle_date_output(date_output):
 def recall_events(user_id, date_output):
     try:
         date_range = handle_date_output(date_output)
+        if not validate_date(date_range["start"]) or not validate_date(date_range["end"]):
+            raise ValueError("Invalid date format")
         events = PositiveEvent.query.filter(
             PositiveEvent.user_id == user_id,
             PositiveEvent.date.between(date_range["start"], date_range["end"])
@@ -334,6 +336,7 @@ def recall_events(user_id, date_output):
     except Exception as e:
         print("Error processing date output: ", str(e))
         return [{"error": "Invalid date format"}]
+
 
 
 def extract_period(user_input):
