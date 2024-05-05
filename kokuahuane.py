@@ -315,9 +315,6 @@ def recall_events(user_id, period_query):
 
 
 
-
-
-
 def extract_period(user_input):
     """Extrait la période de la demande de l'utilisateur."""
     period_response = ask_chatgpt(user_input, "extract_period")
