@@ -301,15 +301,22 @@ def record_event(user_id, description):
     db.session.commit()
     return "Événement enregistré avec succès."
 
+def parse_date(date_str):
+    try:
+        return datetime.strptime(date_str.strip(), '%Y-%m-%d')
+    except ValueError:
+        # Log this error or handle it appropriately
+        return None  # or set a default date, or raise an error
+
 def recall_events(user_id, period_query):
-    # Assumption: period_query returns something like "from 2021-01-01 to 2021-01-31"
     dates = period_query.split(" to ")
-    start_date = datetime.strptime(dates[0], '%Y-%m-%d')
-    end_date = datetime.strptime(dates[1], '%Y-%m-%d')
-    events = PositiveEvent.query.filter(PositiveEvent.user_id == user_id, PositiveEvent.date.between(start_date, end_date)).order_by(PositiveEvent.date.desc()).all()
-    return [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]
-
-
+    if len(dates) == 2:
+        start_date = parse_date(dates[0])
+        end_date = parse_date(dates[1])
+        if start_date and end_date:
+            events = PositiveEvent.query.filter(PositiveEvent.user_id == user_id, PositiveEvent.date.between(start_date, end_date)).order_by(PositiveEvent.date.desc()).all()
+            return [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]
+    return []
 
 def extract_period(user_input):
     """Extrait la période de la demande de l'utilisateur."""
