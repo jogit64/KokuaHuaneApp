@@ -287,6 +287,7 @@ def interact():
     elif "rappel" in intent:
         period_query = ask_chatgpt(user_input, "extract_period")
         response = recall_events(user.id, period_query)
+        return jsonify(response), 200
     else:
         response = ask_chatgpt(user_input, "support")
     return jsonify({"response": response})
@@ -309,14 +310,17 @@ def parse_date(date_str):
         return None  # or set a default date, or raise an error
 
 def recall_events(user_id, period_query):
-    dates = period_query.split(" to ")
-    if len(dates) == 2:
-        start_date = parse_date(dates[0])
-        end_date = parse_date(dates[1])
-        if start_date and end_date:
-            events = PositiveEvent.query.filter(PositiveEvent.user_id == user_id, PositiveEvent.date.between(start_date, end_date)).order_by(PositiveEvent.date.desc()).all()
-            return [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]
-    return []
+    try:
+        dates = period_query.split(" to ")
+        start_date = datetime.strptime(dates[0], '%Y-%m-%d')
+        end_date = datetime.strptime(dates[1], '%Y-%m-%d')
+        events = PositiveEvent.query.filter(PositiveEvent.user_id == user_id, PositiveEvent.date.between(start_date, end_date)).order_by(PositiveEvent.date.desc()).all()
+        print("Events retrieved:", events)  # Ajout d'un log de débogage
+        return [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]
+    except Exception as e:
+        print("Error in recall_events:", e)  # Log des erreurs
+        return []
+
 
 def extract_period(user_input):
     """Extrait la période de la demande de l'utilisateur."""
