@@ -53,10 +53,7 @@ pydantic_core==2.16.3
 PyJWT==2.8.0
 PyMySQL==1.1.0
 pyparsing==3.1.1
-pypiwin32==223
 python-dotenv==1.0.1
-pyttsx3==2.90
-pywin32==306
 requests==2.31.0
 rsa==4.9
 six==1.16.0
