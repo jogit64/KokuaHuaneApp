@@ -286,10 +286,9 @@ def interact():
         action_to_record = ask_chatgpt(user_input, "record")
         response = record_event(user.id, action_to_record)
     elif "rappel" in intent:
-        period_query = ask_chatgpt(user_input, "extract_period")
-        date_output = extract_period(period_query)  # Ensure this is adjusted to handle responses properly
-        response = recall_events(user.id, date_output)
-        return jsonify(response), 200
+       period_query = ask_chatgpt(user_input, "extract_period")
+       date_output = ask_chatgpt(period_query, "convert_date_range")
+       return jsonify(recall_events(user.id, date_output)), 200
     else:
         response = ask_chatgpt(user_input, "support")
 
@@ -308,21 +307,13 @@ def record_event(user_id, description):
 
 
 
-def handle_date_output(date_output):
-    if " to " in date_output:
-        start_date, end_date = date_output.split(" to ")
-        return {"start": start_date, "end": end_date}
-    else:
-        return {"start": date_output, "end": date_output}
-
 def recall_events(user_id, date_output):
-    date_range = handle_date_output(date_output)
+    start_date, end_date = date_output.split(" to ")
     events = PositiveEvent.query.filter(
         PositiveEvent.user_id == user_id,
-        PositiveEvent.date.between(date_range["start"], date_range["end"])
+        PositiveEvent.date.between(start_date, end_date)
     ).order_by(PositiveEvent.date.desc()).all()
-    return [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]
-
+    return [{"description": event.description, "date": event.date} for event in events]
 
 
 
