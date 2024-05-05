@@ -284,15 +284,11 @@ def interact():
     if "enregistrer" in intent:
         action_to_record = ask_chatgpt(user_input, "record")
         response = record_event(user.id, action_to_record)
-
     elif "rappel" in intent:
         period_query = ask_chatgpt(user_input, "extract_period")
         response = recall_events(user.id, period_query)
-
-
     else:
         response = ask_chatgpt(user_input, "support")
-
     return jsonify({"response": response})
 
 
