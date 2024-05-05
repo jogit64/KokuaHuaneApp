@@ -315,14 +315,13 @@ def validate_date(date_text):
         return False
 
 def handle_date_output(date_output):
-    dates = date_output.split(" to ")
-    if all(validate_date(date) for date in dates):
-        return {
-            "start": dates[0],
-            "end": dates[-1]  # Utilise le dernier élément pour gérer les cas avec une seule date
-        }
+    # Vérifie si la sortie contient 'to' pour une période
+    if " to " in date_output:
+        start_date, end_date = date_output.split(" to ")
+        return {"start": start_date, "end": end_date}
     else:
-        raise ValueError("Invalid date format")
+        # Gère les cas où il n'y a qu'une seule date
+        return {"start": date_output, "end": date_output}
 
 def recall_events(user_id, date_output):
     try:
@@ -332,10 +331,9 @@ def recall_events(user_id, date_output):
             PositiveEvent.date.between(date_range["start"], date_range["end"])
         ).order_by(PositiveEvent.date.desc()).all()
         return [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]
-    except ValueError as e:
-        # Log the error and maybe return an error message to the user
-        print(f"Error: {str(e)}")
-        return []
+    except Exception as e:
+        print("Error processing date output: ", str(e))
+        return [{"error": "Invalid date format"}]
 
 
 def extract_period(user_input):
