@@ -286,9 +286,17 @@ def interact():
         action_to_record = ask_chatgpt(user_input, "record")
         response = record_event(user.id, action_to_record)
     elif "rappel" in intent:
-       period_query = ask_chatgpt(user_input, "extract_period")
-       date_output = ask_chatgpt(period_query, "convert_date_range")
-       return jsonify(recall_events(user.id, date_output)), 200
+        period_query = ask_chatgpt(user_input, "extract_period")
+        if period_query:
+            date_output = ask_chatgpt(period_query, "convert_date_range")
+            events = recall_events(user.id, date_output)
+            supportive_message = ask_chatgpt(events, "support")  # Utilisez l'API support pour formuler un message encourageant
+            response = supportive_message
+        else:
+            today = datetime.now().strftime('%Y-%m-%d')
+            events = recall_events(user.id, today)
+            supportive_message = ask_chatgpt(events, "support")  # Formulation pour "aujourd'hui" si aucune date n'est identifiée
+            response = supportive_message
     else:
         response = ask_chatgpt(user_input, "support")
 
@@ -305,35 +313,23 @@ def record_event(user_id, description):
 
 # * Fonction rappel
 
-def recall_events(user_id, date_output):
-    try:
-        date_range = handle_date_output(date_output)
-        if not validate_date(date_range["start"]) or not validate_date(date_range["end"]):
-            raise ValueError("Invalid date format")
-        events = PositiveEvent.query.filter(
-            PositiveEvent.user_id == user_id,
-            PositiveEvent.date.between(date_range["start"], date_range["end"])
-        ).order_by(PositiveEvent.date.desc()).all()
-        return [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]
-    except Exception as e:
-        print("Error processing date output: ", str(e))
-        return [{"error": "Invalid date format"}]
-
-def validate_date(date_text):
-    try:
-        datetime.strptime(date_text, '%Y-%m-%d')
-        return True
-    except ValueError:
-        return False
-
-def handle_date_output(date_output):
-    # Vérifie si la sortie contient 'to' pour une période
-    if " to " in date_output:
-        start_date, end_date = date_output.split(" to ")
-        return {"start": start_date, "end": end_date}
+def recall_events(user_id, date_info):
+    if " to " in date_info:
+        start_date, end_date = date_info.split(" to ")
+        events = query_events(user_id, start_date, end_date)
     else:
-        # Gère les cas où il n'y a qu'une seule date
-        return {"start": date_output, "end": date_output}
+        events = query_events(user_id, date_info, date_info)
+    # Ici, on peut encore utiliser recall si nécessaire
+    return jsonify([{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events])
+
+def query_events(user_id, start_date, end_date):
+    """Récupère les événements pour une période donnée."""
+    return PositiveEvent.query.filter(
+        PositiveEvent.user_id == user_id,
+        PositiveEvent.date.between(start_date, end_date)
+    ).order_by(PositiveEvent.date.desc()).all()
+
+
 
 
 

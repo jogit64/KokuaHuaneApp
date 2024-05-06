@@ -15,18 +15,21 @@
     "top_p": 1.0,
     "temperature": 0.3
   },
-  "recall": {
-    "model": "gpt-4-turbo",
-    "instructions": "Identifiez et fournissez un résumé des événements ou actions passés que l'utilisateur souhaite rappeler, en extrayant les informations pertinentes de la base de données. Concentrez-vous sur les dates et les détails spécifiques demandés.",
-    "max_tokens": 1000,
-    "temperature": 0.5
-  },
+
   "support": {
     "model": "gpt-4-turbo",
     "instructions": "Répondez de manière empathique et soutenante, en fournissant des conseils ou des encouragements adaptés à la situation exprimée par l'utilisateur.",
     "max_tokens": 800,
     "temperature": 0.6
   },
+
+  "recall": {
+    "model": "gpt-4-turbo",
+    "instructions": "Identifiez et fournissez un résumé des événements ou actions passés que l'utilisateur souhaite rappeler, en extrayant les informations pertinentes de la base de données. Concentrez-vous sur les dates et les détails spécifiques demandés.",
+    "max_tokens": 1000,
+    "temperature": 0.5
+  },
+
   "extract_period": {
     "model": "gpt-4-turbo",
     "instructions": "Déterminez la période (par exemple, 'hier', 'cette semaine', 'le mois dernier') à partir de la requête de l'utilisateur.",
