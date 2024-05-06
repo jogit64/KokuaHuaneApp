@@ -10,7 +10,9 @@ from dotenv import load_dotenv
 from datetime import datetime
 from dateutil import parser
 import json
-import re
+import sys
+
+
 
 
 load_dotenv() 
@@ -267,9 +269,6 @@ def ask_chatgpt(prompt, config_type):
 
 
 
-
-
-
 @app.route('/interact', methods=['POST'])
 @jwt_required()
 def interact():
@@ -331,12 +330,15 @@ def query_events(user_id, start_date, end_date):
 
 
 
+def test_convert_date_range():
+    test_cases = ["aujourd'hui", "les deux derniers jours", "ce mois-ci"]
+    for case in test_cases:
+        output = ask_chatgpt(case, "convert_date_range")
+        print(f"Input: {case} -> Output: {output}")
 
-
-
-
-
-
-# Démarrage de l'application Flask.
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
+# Point d'entrée pour décider d'exécuter l'application ou le test
+if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == 'test':
+        test_convert_date_range()
+    else:
+        app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)), debug=True)
