@@ -371,7 +371,7 @@ def query_events(user_id, start_date, end_date):
 
 # ! zone de test ----------------------
 
-@app.route('/test-date-conversion')
+@app.route('/test-date-conversion', methods=['POST'])
 def test_date_conversion():
     return test_convert_date_range()
 
