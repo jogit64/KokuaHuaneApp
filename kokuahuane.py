@@ -295,9 +295,6 @@ def interact():
     return jsonify({"response": response})
 
 
-
-
-
 def record_event(user_id, description):
     """Enregistre un événement positif dans la base de données."""
     new_event = PositiveEvent(user_id=user_id, description=description)
@@ -306,6 +303,21 @@ def record_event(user_id, description):
     return "Événement enregistré avec succès."
 
 
+# * Fonction rappel
+
+def recall_events(user_id, date_output):
+    try:
+        date_range = handle_date_output(date_output)
+        if not validate_date(date_range["start"]) or not validate_date(date_range["end"]):
+            raise ValueError("Invalid date format")
+        events = PositiveEvent.query.filter(
+            PositiveEvent.user_id == user_id,
+            PositiveEvent.date.between(date_range["start"], date_range["end"])
+        ).order_by(PositiveEvent.date.desc()).all()
+        return [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]
+    except Exception as e:
+        print("Error processing date output: ", str(e))
+        return [{"error": "Invalid date format"}]
 
 def validate_date(date_text):
     try:
@@ -323,28 +335,10 @@ def handle_date_output(date_output):
         # Gère les cas où il n'y a qu'une seule date
         return {"start": date_output, "end": date_output}
 
-def recall_events(user_id, date_output):
-    try:
-        date_range = handle_date_output(date_output)
-        if not validate_date(date_range["start"]) or not validate_date(date_range["end"]):
-            raise ValueError("Invalid date format")
-        events = PositiveEvent.query.filter(
-            PositiveEvent.user_id == user_id,
-            PositiveEvent.date.between(date_range["start"], date_range["end"])
-        ).order_by(PositiveEvent.date.desc()).all()
-        return [{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events]
-    except Exception as e:
-        print("Error processing date output: ", str(e))
-        return [{"error": "Invalid date format"}]
 
 
 
-def extract_period(user_input):
-    """Extrait la période de la demande de l'utilisateur."""
-    print("Extracting period with input:", user_input)
-    period_response = ask_chatgpt(user_input, "extract_period")
-    print("Period extracted:", period_response)
-    return period_response.strip()
+
 
 
 # Démarrage de l'application Flask.
