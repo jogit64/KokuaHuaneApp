@@ -311,10 +311,12 @@ def interact():
         
         # Extrait la période potentiellement mentionnée par l'utilisateur
         period_query = ask_chatgpt(user_input, "extract_period")
+        logging.debug(f"Extracted period query: {period_query}") 
+
         if period_query:
             # Convertit la période extraite en plage de dates
             date_output = ask_chatgpt(period_query, "convert_date_range")
-            logging.debug(f"Date output from period: {date_output}")
+            logging.debug(f"Converted date output from extracted period: {date_output}")
 
             # Récupère les événements correspondants à cette plage de dates
             events = recall_events(user.id, date_output)
