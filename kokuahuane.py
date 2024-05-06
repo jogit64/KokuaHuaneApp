@@ -11,6 +11,7 @@ from datetime import datetime
 from dateutil import parser
 import json
 import sys
+import logging
 
 
 
@@ -221,11 +222,11 @@ class PositiveEvent(db.Model):
 
 
 def is_development():
-    """Déterminer si l'application est en mode développement."""
+    #Déterminer si l'application est en mode développement.#
     return os.getenv('FLASK_ENV') == 'development'
 
 def jwt_optional(fn):
-    """Un décorateur personnalisé qui n'exige pas de JWT en mode développement."""
+    #Un décorateur personnalisé qui n'exige pas de JWT en mode développement.#
     from flask_jwt_extended import jwt_required
 
     if is_development():
@@ -245,7 +246,7 @@ def jwt_optional(fn):
 
 # Fonction pour interroger l'API ChatGPT d'OpenAI.
 def ask_chatgpt(prompt, config_type):
-    """Interroger l'API ChatGPT avec des paramètres spécifiques définis dans un fichier de configuration JSON."""
+    #Interroger l'API ChatGPT avec des paramètres spécifiques définis dans un fichier de configuration JSON.#
     # Charge la configuration appropriée pour le type demandé
     with open('gpt_config.json', 'r') as file:
         config = json.load(file)[config_type]
@@ -268,73 +269,105 @@ def ask_chatgpt(prompt, config_type):
         return "Error processing your request."
 
 
-
 @app.route('/interact', methods=['POST'])
 @jwt_required()
 def interact():
+    # Récupère l'identifiant de l'utilisateur à partir du token JWT
     user_email = get_jwt_identity()
+    # Recherche l'utilisateur dans la base de données par son email
     user = User.query.filter_by(email=user_email).first()
 
+    # Si l'utilisateur n'est pas trouvé, renvoie une erreur 404
     if not user:
         return jsonify({"error": "User not found"}), 404
 
+    # Récupère l'entrée de l'utilisateur à partir de la requête JSON
     user_input = request.json.get('question', '')
+    # Demande à ChatGPT de déterminer l'intention de l'utilisateur
     intent = ask_chatgpt(user_input, "detect_intent")
 
+
+
+
+
+
+    # Configuration du logging
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
+    # Traite les différentes intentions possibles
     if "enregistrer" in intent:
+        logging.debug(f"Intent 'enregistrer' detected with input: {user_input}")
+        # Demande à ChatGPT de formuler l'action à enregistrer
         action_to_record = ask_chatgpt(user_input, "record")
+        logging.debug(f"Action to record: {action_to_record}")
+        # Enregistre l'action dans la base de données
         response = record_event(user.id, action_to_record)
+        logging.debug(f"Response from record_event: {response}")
     elif "rappel" in intent:
+        logging.debug(f"Intent 'rappel' detected with input: {user_input}")
+        # Extrait la période potentiellement mentionnée par l'utilisateur
         period_query = ask_chatgpt(user_input, "extract_period")
+        logging.debug(f"Period query: {period_query}")
         if period_query:
+            # Convertit la période extraite en plage de dates
             date_output = ask_chatgpt(period_query, "convert_date_range")
+            logging.debug(f"Date output from period: {date_output}")
+            # Récupère les événements correspondants à cette plage de dates
             events = recall_events(user.id, date_output)
-            supportive_message = ask_chatgpt(events, "support")  # Utilisez l'API support pour formuler un message encourageant
+            # Demande à ChatGPT de formuler un message de soutien avec ces événements
+            supportive_message = ask_chatgpt(events, "support")
             response = supportive_message
         else:
+            # Si aucune période n'est identifiée, utilise la date d'aujourd'hui
             today = datetime.now().strftime('%Y-%m-%d')
+            logging.debug(f"No period identified, using today's date: {today}")
             events = recall_events(user.id, today)
-            supportive_message = ask_chatgpt(events, "support")  # Formulation pour "aujourd'hui" si aucune date n'est identifiée
+            supportive_message = ask_chatgpt(events, "support")
             response = supportive_message
     else:
+        logging.debug(f"No clear intent found, defaulting to support API with input: {user_input}")
+        # Si aucune intention claire n'est trouvée, utilise l'API support pour répondre
         response = ask_chatgpt(user_input, "support")
 
-    return jsonify({"response": response})
+        # Renvoie la réponse sous forme de JSON
+        return jsonify({"response": response})
 
+    def record_event(user_id, description):
+        logging.debug(f"Recording event for user_id: {user_id} with description: {description}")
+        # Enregistre un événement positif dans la base de données.
+        new_event = PositiveEvent(user_id=user_id, description=description)
+        db.session.add(new_event)
+        db.session.commit()
+        return "Événement enregistré avec succès."
 
-def record_event(user_id, description):
-    """Enregistre un événement positif dans la base de données."""
-    new_event = PositiveEvent(user_id=user_id, description=description)
-    db.session.add(new_event)
-    db.session.commit()
-    return "Événement enregistré avec succès."
+    def recall_events(user_id, date_info):
+        logging.debug(f"Recalling events for user_id: {user_id} with date_info: {date_info}")
+        # Récupère les événements d'un utilisateur pour une période donnée.
+        if " to " in date_info:
+            start_date, end_date = date_info.split(" to ")
+            events = query_events(user_id, start_date, end_date)
+        else:
+            events = query_events(user_id, date_info, date_info)
+        return jsonify([{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events])
 
+    def query_events(user_id, start_date, end_date):
+        logging.debug(f"Querying events between {start_date} and {end_date} for user_id: {user_id}")
+        # Interroge la base de données pour récupérer les événements entre deux dates.
+        return PositiveEvent.query.filter(
+            PositiveEvent.user_id == user_id,
+            PositiveEvent.date.between(start_date, end_date)
+        ).order_by(PositiveEvent.date.desc()).all()
 
-# * Fonction rappel
-
-def recall_events(user_id, date_info):
-    if " to " in date_info:
-        start_date, end_date = date_info.split(" to ")
-        events = query_events(user_id, start_date, end_date)
-    else:
-        events = query_events(user_id, date_info, date_info)
-    # Ici, on peut encore utiliser recall si nécessaire
-    return jsonify([{"description": event.description, "date": event.date.strftime('%Y-%m-%d')} for event in events])
-
-def query_events(user_id, start_date, end_date):
-    """Récupère les événements pour une période donnée."""
-    return PositiveEvent.query.filter(
-        PositiveEvent.user_id == user_id,
-        PositiveEvent.date.between(start_date, end_date)
-    ).order_by(PositiveEvent.date.desc()).all()
 
 
 
 def test_convert_date_range():
+    # Tests unitaires pour vérifier la fonctionnalité de conversion de date de l'API. #
     test_cases = ["aujourd'hui", "les deux derniers jours", "ce mois-ci"]
     for case in test_cases:
         output = ask_chatgpt(case, "convert_date_range")
         print(f"Input: {case} -> Output: {output}")
+
 
 # Point d'entrée pour décider d'exécuter l'application ou le test
 if __name__ == "__main__":
