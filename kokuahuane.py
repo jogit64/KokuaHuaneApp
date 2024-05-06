@@ -213,7 +213,7 @@ def ask():
 
 
 
-# ! EXTENSION DU PROJET ----------------------------------------------------------------------------------
+# ! EXTENSION 1 DU PROJET ----------------------------------------------------------------------------------
 
 
 class PositiveEvent(db.Model):
@@ -369,7 +369,7 @@ def query_events(user_id, start_date, end_date):
 
 
 
-# ! zone de test ----------------------
+# !*zone de test ----------------------
 
 @app.route('/test-date-conversion', methods=['POST'])
 def test_date_conversion():
@@ -385,9 +385,82 @@ def test_convert_date_range():
     return jsonify(results)  # Retourne un JSON des résultats
 
 
+def test_convert_date_range_local():
+    """ Tests unitaires pour vérifier la fonctionnalité de conversion de date de l'API. """
+    test_cases = ["aujourd'hui", "les deux derniers jours", "ce mois-ci"]
+    for case in test_cases:
+        output = ask_chatgpt(case, "convert_date_range")
+        print(f"Input: {case} -> Output: {output}")
+
+
+# ! FIN DE L'EXTENSION 1 DU PROJET ----------------------------------------------------------------------------------
+# Cette section du code gère l'extension de fonctionnalités de l'application.
+# Elle implémente la capacité d'enregistrer des événements positifs et de les rappeler à l'utilisateur
+# pour soutenir sa motivation et son moral. Cependant, nous rencontrons des difficultés avec la fonction
+# de conversion de dates utilisée pour interpréter les expressions de dates fournies par l'utilisateur.
+# 
+# En raison de cette limitation, nous décidons d'abandonner cette approche et de simplifier l'interaction
+# avec l'utilisateur en ajoutant des boutons côté client pour des actions spécifiques comme l'enregistrement
+# d'une action positive ou le rappel des actions positives pour une période donnée. Cela permettra
+# d'améliorer l'expérience utilisateur tout en réduisant la complexité du traitement des intentions
+# par ChatGPT. Nous allons donc revoir notre approche et nous concentrer sur la mise en œuvre de cette
+# nouvelle fonctionnalité plus conviviale pour l'utilisateur.
+
+
+# (env) C:\Users\johan\Documents\projets web\0 - MES IA\IA KokuaHuane\KokuaHuaneApp>curl -k -X POST https://kokuauhane-071dbd833182.herokuapp.com/test-date-conversion
+# [
+#   "Input: aujourd'hui -> Output: 2023-11-27",
+#   "Input: les deux derniers jours -> Output: 2023-09-27 - 2023-09-28",
+#   "Input: ce mois-ci -> Output: 2023-09-01 - 2023-09-30"
+# ]
+
+# (env) C:\Users\johan\Documents\projets web\0 - MES IA\IA KokuaHuane\KokuaHuaneApp>curl -k -X POST https://kokuauhane-071dbd833182.herokuapp.com/test-date-conversion
+# [
+#   "Input: aujourd'hui -> Output: 2022-03-22",
+#   "Input: les deux derniers jours -> Output: 2022-03-06 - 2022-03-07",
+#   "Input: ce mois-ci -> Output: 2022-02-01 - 2022-02-28"
+# ]
+
+# (env) C:\Users\johan\Documents\projets web\0 - MES IA\IA KokuaHuane\KokuaHuaneApp>
+
+
+
+# et en local : 
+# 
+# (env) C:\Users\johan\Documents\projets web\0 - MES IA\IA KokuaHuane\KokuaHuaneApp>python kokuahuane.py test
+# Database URI: postgresql://postgres@localhost/kokuahuane_local
+# 2024-05-06 17:35:00,571 - DEBUG - Starting new HTTPS connection (1): api.openai.com:443
+# 2024-05-06 17:35:02,075 - DEBUG - https://api.openai.com:443 "POST /v1/chat/completions HTTP/1.1" 200 None
+# Input: aujourd'hui -> Output: 2022-03-13
+# 2024-05-06 17:35:02,090 - DEBUG - Starting new HTTPS connection (1): api.openai.com:443
+# 2024-05-06 17:35:04,449 - DEBUG - https://api.openai.com:443 "POST /v1/chat/completions HTTP/1.1" 200 None
+# Input: les deux derniers jours -> Output: 2022-03-06 - 2022-03-07
+# 2024-05-06 17:35:04,462 - DEBUG - Starting new HTTPS connection (1): api.openai.com:443
+# 2024-05-06 17:35:06,772 - DEBUG - https://api.openai.com:443 "POST /v1/chat/completions HTTP/1.1" 200 None
+# Input: ce mois-ci -> Output: 2022-02-01 - 2022-02-28
+
+# (env) C:\Users\johan\Documents\projets web\0 - MES IA\IA KokuaHuane\KokuaHuaneApp>
+
+# !  ----------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+# ! EXTENSION 2 DU PROJET -------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
 # Point d'entrée pour décider d'exécuter l'application ou le test
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == 'test':
-        test_convert_date_range()
+        # test_convert_date_range()
+        test_convert_date_range_local()
     else:
         app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)), debug=True)
