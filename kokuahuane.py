@@ -369,13 +369,20 @@ def query_events(user_id, start_date, end_date):
 
 
 
+# ! zone de test ----------------------
+
+@app.route('/test-date-conversion')
+def test_date_conversion():
+    return test_convert_date_range()
+
 
 def test_convert_date_range():
-    # Tests unitaires pour vérifier la fonctionnalité de conversion de date de l'API. #
+    results = []
     test_cases = ["aujourd'hui", "les deux derniers jours", "ce mois-ci"]
     for case in test_cases:
         output = ask_chatgpt(case, "convert_date_range")
-        print(f"Input: {case} -> Output: {output}")
+        results.append(f"Input: {case} -> Output: {output}")
+    return jsonify(results)  # Retourne un JSON des résultats
 
 
 # Point d'entrée pour décider d'exécuter l'application ou le test
