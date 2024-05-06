@@ -33,8 +33,12 @@ app = Flask(__name__)
 
 # Configuration de l'URI de la base de données à partir des variables d'environnement.
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL').replace("postgres://", "postgresql://", 1)
+
+
+# Configuration du logging
 app.config['DEBUG'] = True  # Active le mode debug, qui est utile pour le développement
 app.config['LOGGING_LEVEL'] = 'DEBUG'  # Définit le niveau de logging à debug pour voir plus de détails dans les logs
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 
@@ -292,16 +296,26 @@ def interact():
 
     # Traite les différentes intentions possibles
     if "enregistrer" in intent:
+        logging.debug(f"Intent 'enregistrer' detected with input: {user_input}")
+
         # Demande à ChatGPT de formuler l'action à enregistrer
         action_to_record = ask_chatgpt(user_input, "record")
+        logging.debug(f"Action to record: {action_to_record}")
+
         # Enregistre l'action dans la base de données
         response = record_event(user.id, action_to_record)
+        logging.debug(f"Response from record_event: {response}")
+
     elif "rappel" in intent:
+        logging.debug(f"Intent 'rappel' detected with input: {user_input}")
+        
         # Extrait la période potentiellement mentionnée par l'utilisateur
         period_query = ask_chatgpt(user_input, "extract_period")
         if period_query:
             # Convertit la période extraite en plage de dates
             date_output = ask_chatgpt(period_query, "convert_date_range")
+            logging.debug(f"Date output from period: {date_output}")
+
             # Récupère les événements correspondants à cette plage de dates
             events = recall_events(user.id, date_output)
             # Demande à ChatGPT de formuler un message de soutien avec ces événements
@@ -310,10 +324,12 @@ def interact():
         else:
             # Si aucune période n'est identifiée, utilise la date d'aujourd'hui
             today = datetime.now().strftime('%Y-%m-%d')
+            logging.debug(f"No period identified, using today's date: {today}")
             events = recall_events(user.id, today)
             supportive_message = ask_chatgpt(events, "support")
             response = supportive_message
     else:
+        logging.debug(f"No clear intent found, defaulting to support API with input: {user_input}")
         # Si aucune intention claire n'est trouvée, utilise l'API support pour répondre
         response = ask_chatgpt(user_input, "support")
 
@@ -322,6 +338,7 @@ def interact():
 
 
 def record_event(user_id, description):
+    logging.debug(f"Recording event for user_id: {user_id} with description: {description}")
     # Enregistre un événement positif dans la base de données. #
     new_event = PositiveEvent(user_id=user_id, description=description)
     db.session.add(new_event)
@@ -330,6 +347,7 @@ def record_event(user_id, description):
 
 
 def recall_events(user_id, date_info):
+    logging.debug(f"Recalling events for user_id: {user_id} with date_info: {date_info}")
     # Récupère les événements d'un utilisateur pour une période donnée. #
     if " to " in date_info:
         start_date, end_date = date_info.split(" to ")
@@ -340,6 +358,7 @@ def recall_events(user_id, date_info):
 
 
 def query_events(user_id, start_date, end_date):
+    logging.debug(f"Querying events between {start_date} and {end_date} for user_id: {user_id}")
     # Interroge la base de données pour récupérer les événements entre deux dates. #
     return PositiveEvent.query.filter(
         PositiveEvent.user_id == user_id,
