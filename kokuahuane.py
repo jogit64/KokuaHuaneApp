@@ -367,6 +367,24 @@ def query_events(user_id, start_date, end_date):
         PositiveEvent.date.between(start_date, end_date)
     ).order_by(PositiveEvent.date.desc()).all()
 
+# !* Gestion de la date ---------------
+
+def get_current_datetime():
+    api_key = 'YOUR_API_KEY'  # Remplace cela par ta clé d'API TimezoneDB
+    url = f'http://api.timezonedb.com/v2.1/get-time-zone?key={api_key}&format=json&by=zone&zone=Europe/Paris'
+    
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        return data['formatted']
+    else:
+        print("Failed to fetch current datetime.")
+        return None
+
+# Utilisation de la fonction pour obtenir la date et l'heure actuelles
+current_datetime = get_current_datetime()
+
+
 
 
 # !*zone de test ----------------------
