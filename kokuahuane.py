@@ -489,6 +489,9 @@ def ask_gpt_mood(prompt, config_type):
         'presence_penalty': config.get('presence_penalty', 0)
     }
 
+    # Log de la requête envoyée à l'API OpenAI
+    app.logger.debug(f"Requête envoyée à l'API : {data}")
+
     # Utilisation des headers globaux qui contiennent déjà la clé API correcte
     response = requests.post('https://api.openai.com/v1/chat/completions', headers=headers, json=data)
 
@@ -511,7 +514,6 @@ def ask_gpt_mood(prompt, config_type):
         # Log de l'erreur de réponse de l'API pour aider à identifier le problème
         app.logger.error(f"Échec de la réception d'une réponse valide d'OpenAI : {response.text}")
         return None
-
 
 
 @app.route('/propose_event', methods=['POST'])
