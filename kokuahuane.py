@@ -473,6 +473,36 @@ def test_convert_date_range_local():
 
 # ! EXTENSION 2 DU PROJET -------------------------------------------------------------------------------------------
 
+# Fonction pour interroger l'API OpenAI avec un prompt spécifique
+def ask_gpt_mood(prompt, config_type):
+    with open('gpt_config.json', 'r') as file:
+        config = json.load(file)[config_type]
+    
+    data = {
+        'model': config['model'],
+        'messages': [{'role': 'user', 'content': f"{config['instructions']} {prompt}"}],
+        'max_tokens': config['max_tokens'],
+        'temperature': config.get('temperature', 1),
+        'top_p': config.get('top_p', 1),
+        'frequency_penalty': config.get('frequency_penalty', 0),
+        'presence_penalty': config.get('presence_penalty', 0)
+    }
+
+    headers = {'Authorization': 'Bearer ' + 'your_openai_api_key', 'Content-Type': 'application/json'}
+    response = requests.post('https://api.openai.com/v1/chat/completions', headers=headers, json=data)
+
+    if response.status_code == 200:
+        return response.json()['choices'][0]['message']['content'].strip()
+    else:
+        app.logger.error('Failed to receive valid response from OpenAI: %s', response.text)
+        return None
+
+
+
+
+
+
+
 @app.route('/propose_event', methods=['POST'])
 @jwt_required()
 def propose_event():
@@ -486,11 +516,11 @@ def propose_event():
     user_input = request.json.get('question', '')
     
     # Premier appel pour tenter d'extraire un événement
-    action_to_propose = ask_chatgpt(user_input, "record")
+    action_to_propose = ask_gpt_mood(user_input, "record")
 
     # Si aucun événement clair n'est détecté, utilisez le second prompt pour guider l'utilisateur
     if not action_to_propose or action_to_propose in ["Aucun événement détecté", ""]:
-        guidance_response = ask_chatgpt(user_input, "guidance")
+        guidance_response = ask_gpt_mood(user_input, "guidance")
         return jsonify({"status": "info", "message": guidance_response or "Veuillez fournir plus de détails sur l'événement."})
     
     # Si un événement est détecté
