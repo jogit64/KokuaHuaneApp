@@ -474,7 +474,7 @@ def test_convert_date_range_local():
 # ! EXTENSION 2 DU PROJET -------------------------------------------------------------------------------------------
 
 # Fonction pour interroger l'API OpenAI avec un prompt spécifique
-ef ask_gpt_mood(prompt, config_type):
+def ask_gpt_mood(prompt, config_type):
     # Charge la configuration appropriée pour le type demandé
     with open('gpt_config.json', 'r') as file:
         config = json.load(file)[config_type]
