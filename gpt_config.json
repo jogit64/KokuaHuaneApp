@@ -10,7 +10,7 @@
   },
   "record": {
     "model": "gpt-4",
-    "instructions": "Déterminez si l'utilisateur veut 'enregistrer' un événement, si un événement clair basé sur l'input est détectable, formulez-le clairement. Sinon, indiquez 'NONO événement détecté'.",
+    "instructions": "Déterminez si l'utilisateur veut 'enregistrer' un événement, si un événement clair basé sur l'input est détectable, formulez-le clairement. Sinon, indiquez 'test'.",
     "max_tokens": 50,
     "top_p": 1.0,
     "temperature": 0.3
