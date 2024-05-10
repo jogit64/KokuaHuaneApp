@@ -476,16 +476,23 @@ def propose_event():
     user = User.query.filter_by(email=user_email).first()
     
     if not user:
+        logging.error("User not found")
         return jsonify({"error": "User not found"}), 404
     
     user_input = request.json.get('question', '')
+    logging.debug(f"Received user input: {user_input}")
+    
     action_to_propose = ask_chatgpt(user_input, "record")
     
     if action_to_propose:
         logging.debug(f"Action to propose detected: {action_to_propose}")
         return jsonify({"status": "success", "message": "Confirmez-vous cet événement ?", "event": action_to_propose, "options": ["Confirmer", "Annuler"]})
     else:
+        logging.error("Failed to identify action to record")
         return jsonify({"status": "error", "message": "Impossible d'identifier l'action à enregistrer. Veuillez reformuler votre demande."})
+
+
+
 
 @app.route('/confirm_event', methods=['POST'])
 @jwt_required()
