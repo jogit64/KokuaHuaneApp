@@ -479,26 +479,32 @@ def ask_gpt_mood(prompt, config_type):
     with open('gpt_config.json', 'r') as file:
         config = json.load(file)[config_type]
 
-    # Préparation de la requête de données en respectant la structure attendue par l'API
     data = {
         'model': config['model'],
         'messages': [{'role': 'user', 'content': f"{config['instructions']} {prompt}"}],
         'max_tokens': config['max_tokens'],
-        'temperature': config.get('temperature', 1),  # Valeur par défaut si non spécifiée
-        'top_p': config.get('top_p', 1),  # Valeur par défaut si non spécifiée
-        'frequency_penalty': config.get('frequency_penalty', 0),  # Valeur par défaut
-        'presence_penalty': config.get('presence_penalty', 0)  # Valeur par défaut
+        'temperature': config.get('temperature', 1),
+        'top_p': config.get('top_p', 1),
+        'frequency_penalty': config.get('frequency_penalty', 0),
+        'presence_penalty': config.get('presence_penalty', 0)
     }
 
     # Utilisation des headers globaux qui contiennent déjà la clé API correcte
     response = requests.post('https://api.openai.com/v1/chat/completions', headers=headers, json=data)
 
     if response.status_code == 200:
+        json_response = response.json()
         # Vérifie la présence de 'choices' et extrait la réponse
-        return response.json()['choices'][0]['text'].strip()
+        if 'choices' in json_response and len(json_response['choices']) > 0 and 'message' in json_response['choices'][0] and 'content' in json_response['choices'][0]['message']:
+            return json_response['choices'][0]['message']['content'].strip()
+        else:
+            # Log la réponse pour aider à déboguer
+            app.logger.debug(f"Unexpected response structure: {json_response}")
+            return None
     else:
-        app.logger.error('Failed to receive valid response from OpenAI: %s', response.text)
+        app.logger.error(f"Failed to receive valid response from OpenAI: {response.text}")
         return None
+
 
 
 
