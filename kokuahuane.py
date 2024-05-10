@@ -525,19 +525,22 @@ def propose_event():
         return jsonify({"error": "User not found"}), 404
     
     user_input = request.json.get('question', '')
+    logging.debug(f"User input: {user_input}")  # Ajoutez ceci pour voir l'entrée utilisateur
     
     # Appel pour tenter d'extraire un événement
     event_detection = ask_gpt_mood(user_input, "record")
 
-    # Si aucun événement clair n'est détecté, utilisez le modèle "guidance" pour guider l'utilisateur
+    logging.debug(f"Detected event response: {event_detection}")  # Log pour voir la réponse de détection d'événement
+
+    # Vérifie si un événement clair est détecté
     if not event_detection or event_detection.strip() == "Aucun événement détecté":
+        # Utilise le modèle "guidance" pour guider l'utilisateur si aucun événement clair n'est détecté
         guidance_response = ask_gpt_mood(user_input, "guidance")
         return jsonify({"status": "info", "message": guidance_response or "Veuillez fournir plus de détails sur l'événement."})
-    
-    # Si un événement est détecté
-    logging.debug(f"Event detected: {event_detection}")
-    return jsonify({"status": "success", "message": "Confirmez-vous cet événement ?", "event": event_detection, "options": ["Confirmer", "Annuler"]})
-
+    else:
+        # Si un événement est détecté, demandez la confirmation
+        logging.debug(f"Event detected: {event_detection}")
+        return jsonify({"status": "success", "message": "Confirmez-vous cet événement ?", "event": event_detection, "options": ["Confirmer", "Annuler"]})
 
 
 
