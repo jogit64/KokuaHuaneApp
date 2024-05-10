@@ -63,6 +63,7 @@ CORS(app, supports_credentials=True, resources={
     r"/login": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]},
     r"/register": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]},  
     r"/interact": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]} 
+    r"/propose_event": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]} 
 })
 
 
@@ -467,7 +468,48 @@ def test_convert_date_range_local():
 
 # ! EXTENSION 2 DU PROJET -------------------------------------------------------------------------------------------
 
+@app.route('/propose_event', methods=['POST'])
+@jwt_required()
+def propose_event():
+    user_email = get_jwt_identity()
+    user = User.query.filter_by(email=user_email).first()
+    
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    
+    user_input = request.json.get('question', '')
+    action_to_propose = ask_chatgpt(user_input, "record")
+    
+    if action_to_propose:
+        logging.debug(f"Action to propose detected: {action_to_propose}")
+        return jsonify({"status": "success", "message": "Confirmez-vous cet événement ?", "event": action_to_propose, "options": ["Confirmer", "Annuler"]})
+    else:
+        return jsonify({"status": "error", "message": "Impossible d'identifier l'action à enregistrer. Veuillez reformuler votre demande."})
 
+@app.route('/confirm_event', methods=['POST'])
+@jwt_required()
+def confirm_event():
+    user_email = get_jwt_identity()
+    user = User.query.filter_by(email=user_email).first()
+    
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    
+    confirmation = request.json.get('confirmation', '')
+    event_description = request.json.get('event', '')
+    
+    if confirmation == "Confirmer":
+        response = save_event(user.id, event_description)
+        return jsonify({"status": "success", "message": response})
+    else:
+        return jsonify({"status": "cancelled", "message": "L'action a été annulée."})
+
+def save_event(user_id, description):
+    logging.debug(f"Recording event for user_id: {user_id} with description: {description}")
+    new_event = PositiveEvent(user_id=user_id, description=description)
+    db.session.add(new_event)
+    db.session.commit()
+    return "Événement enregistré avec succès."
 
 
 
