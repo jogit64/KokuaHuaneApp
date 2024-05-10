@@ -535,11 +535,13 @@ def propose_event():
     # Vérifie si un événement clair est détecté
     if not event_detection or event_detection.strip() == "Aucun événement détecté":
         # Directement retourner un message invitant l'utilisateur à fournir plus de détails
-        return jsonify({"status": "info", "message": "Nous n'avons détecté aucun événement spécifique. Veuillez fournir plus de détails pour aider à identifier l'événement."})
+        return jsonify({"status": "info", "message": "Nous n'avons pas identifié d'événement spécifique. Pouvez-vous donner plus de détails pour que nous puissions mieux vous aider ?"})
     else:
         # Si un événement est détecté, demandez la confirmation
         logging.debug(f"Event detected: {event_detection}")
         return jsonify({"status": "success", "message": "Confirmez-vous cet événement ?", "event": event_detection, "options": ["Confirmer", "Annuler"]})
+
+
 
 
 
