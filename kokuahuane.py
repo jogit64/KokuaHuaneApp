@@ -489,9 +489,6 @@ def ask_gpt_mood(prompt, config_type):
         'presence_penalty': config.get('presence_penalty', 0)
     }
 
-    # Log de la requête envoyée à l'API OpenAI
-    app.logger.debug(f"Requête envoyée à l'API : {data}")
-
     # Utilisation des headers globaux qui contiennent déjà la clé API correcte
     response = requests.post('https://api.openai.com/v1/chat/completions', headers=headers, json=data)
 
@@ -516,6 +513,7 @@ def ask_gpt_mood(prompt, config_type):
         return None
 
 
+
 @app.route('/propose_event', methods=['POST'])
 @jwt_required()
 def propose_event():
@@ -528,18 +526,17 @@ def propose_event():
     
     user_input = request.json.get('question', '')
     
-    # Premier appel pour tenter d'extraire un événement
-    action_to_propose = ask_gpt_mood(user_input, "record")
+    # Appel pour tenter d'extraire un événement
+    event_detection = ask_gpt_mood(user_input, "record")
 
-    # Si aucun événement clair n'est détecté, utilisez le second prompt pour guider l'utilisateur
-    if not action_to_propose or action_to_propose in ["Aucun événement détecté", ""]:
+    # Si aucun événement clair n'est détecté, utilisez le modèle "guidance" pour guider l'utilisateur
+    if not event_detection or event_detection.strip() == "Aucun événement détecté":
         guidance_response = ask_gpt_mood(user_input, "guidance")
         return jsonify({"status": "info", "message": guidance_response or "Veuillez fournir plus de détails sur l'événement."})
     
     # Si un événement est détecté
-    logging.debug(f"Action to propose detected: {action_to_propose}")
-    return jsonify({"status": "success", "message": "Confirmez-vous cet événement ?", "event": action_to_propose, "options": ["Confirmer", "Annuler"]})
-
+    logging.debug(f"Event detected: {event_detection}")
+    return jsonify({"status": "success", "message": "Confirmez-vous cet événement ?", "event": event_detection, "options": ["Confirmer", "Annuler"]})
 
 
 
