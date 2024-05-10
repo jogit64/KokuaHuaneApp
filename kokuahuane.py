@@ -533,14 +533,14 @@ def propose_event():
     logging.debug(f"Detected event response: {event_detection}")  # Log pour voir la réponse de détection d'événement
 
     # Vérifie si un événement clair est détecté
-    if not event_detection or event_detection.strip() == "Aucun événement détecté":
+    if not event_detection or event_detection.strip() == "ZERO événement détecté":
         # Utilise le modèle "guidance" pour guider l'utilisateur si aucun événement clair n'est détecté
         guidance_response = ask_gpt_mood(user_input, "guidance")
         return jsonify({"status": "info", "message": guidance_response or "Veuillez fournir plus de détails sur l'événement."})
     else:
         # Si un événement est détecté, demandez la confirmation
         logging.debug(f"Event detected: {event_detection}")
-        return jsonify({"status": "success", "message": "Confirmez-vous cet événement ?", "event": event_detection, "options": ["Confirmer", "Annuler"]})
+        return jsonify({"status": "success", "message": "TU valides ? cet événement ?", "event": event_detection, "options": ["Confirmer", "Annuler"]})
 
 
 
