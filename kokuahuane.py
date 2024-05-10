@@ -137,6 +137,8 @@ def hello():
         return render_template('index.html', question=question, response=response)
     return render_template('index.html', question=None, response=None)
 
+
+
 # Route pour connaitre la liste des utilisateurs.
 @app.route('/users', methods=['GET'])
 def list_users():
@@ -147,6 +149,8 @@ def list_users():
     except Exception as e:
         app.logger.error(f"Failed to fetch users: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+
 
 # Route pour enregistrer un nouvel utilisateur.
 @app.route('/register', methods=['POST', 'OPTIONS'])
