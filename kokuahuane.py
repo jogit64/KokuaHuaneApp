@@ -525,11 +525,11 @@ def propose_event():
     user_input = request.json.get('question', '')
     
     # Premier appel pour tenter d'extraire un événement
-    action_to_propose = ask_gpt_mood(user_input, "record")
+    action_to_propose = ask_chatgpt(user_input, "record")
 
     # Si aucun événement clair n'est détecté, utilisez le second prompt pour guider l'utilisateur
     if not action_to_propose or action_to_propose in ["Aucun événement détecté", ""]:
-        guidance_response = ask_gpt_mood(user_input, "guidance")
+        guidance_response = ask_chatgpt(user_input, "guidance")
         return jsonify({"status": "info", "message": guidance_response or "Veuillez fournir plus de détails sur l'événement."})
     
     # Si un événement est détecté
