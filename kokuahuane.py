@@ -484,16 +484,19 @@ def propose_event():
         return jsonify({"error": "User not found"}), 404
     
     user_input = request.json.get('question', '')
-    logging.debug(f"Received user input: {user_input}")
     
+    # Premier appel pour tenter d'extraire un événement
     action_to_propose = ask_chatgpt(user_input, "record")
+
+    # Si aucun événement clair n'est détecté, utilisez le second prompt pour guider l'utilisateur
+    if not action_to_propose or action_to_propose in ["Aucun événement détecté", ""]:
+        guidance_response = ask_chatgpt(user_input, "guidance")
+        return jsonify({"status": "info", "message": guidance_response or "Veuillez fournir plus de détails sur l'événement."})
     
-    if action_to_propose:
-        logging.debug(f"Action to propose detected: {action_to_propose}")
-        return jsonify({"status": "success", "message": "Confirmez-vous cet événement ?", "event": action_to_propose, "options": ["Confirmer", "Annuler"]})
-    else:
-        logging.error("Failed to identify action to record")
-        return jsonify({"status": "error", "message": "Impossible d'identifier l'action à enregistrer. Veuillez reformuler votre demande."})
+    # Si un événement est détecté
+    logging.debug(f"Action to propose detected: {action_to_propose}")
+    return jsonify({"status": "success", "message": "Confirmez-vous cet événement ?", "event": action_to_propose, "options": ["Confirmer", "Annuler"]})
+
 
 
 

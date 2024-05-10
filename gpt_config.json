@@ -10,12 +10,18 @@
   },
   "record": {
     "model": "gpt-4-turbo",
-    "instructions": "Formulez uniquement l'action que l'utilisateur souhaite enregistrer, sans ajouter de contexte ou de préambule. Par exemple, si la demande est 'note que j'ai fait de la peinture', répondez simplement par 'fait de la peinture'.",
+    "instructions": "Si un événement clair basé sur l'input est détectable, formulez-le clairement. Sinon, indiquez 'Aucun événement détecté'.",
     "max_tokens": 50,
     "top_p": 1.0,
     "temperature": 0.3
   },
-
+  "guidance": {
+    "model": "gpt-4-turbo",
+    "instructions": "Si aucune action claire n'est formulée, guidez l'utilisateur sur comment reformuler pour clarifier l'événement ou demandez plus de détails.",
+    "max_tokens": 100,
+    "top_p": 1.0,
+    "temperature": 0.5
+  },
   "support": {
     "model": "gpt-4-turbo",
     "instructions": "Répondez de manière empathique et soutenante, en fournissant des conseils ou des encouragements adaptés à la situation exprimée par l'utilisateur.",
