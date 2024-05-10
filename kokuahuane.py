@@ -494,21 +494,23 @@ def ask_gpt_mood(prompt, config_type):
 
     if response.status_code == 200:
         json_response = response.json()
+        # Log de la réponse complète de l'API pour faciliter le débogage
+        app.logger.debug(f"Réponse complète de l'API : {json_response}")
+
         # Vérifie la présence de 'choices' et extrait la réponse
         if 'choices' in json_response and len(json_response['choices']) > 0 and 'message' in json_response['choices'][0] and 'content' in json_response['choices'][0]['message']:
-            return json_response['choices'][0]['message']['content'].strip()
+            content_extracted = json_response['choices'][0]['message']['content'].strip()
+            # Log du contenu extrait pour voir ce qui a été précisément obtenu
+            app.logger.debug(f"Contenu extrait : {content_extracted}")
+            return content_extracted
         else:
-            # Log la réponse pour aider à déboguer
-            app.logger.debug(f"Unexpected response structure: {json_response}")
+            # Log la structure inattendue de la réponse pour aider à déboguer
+            app.logger.debug(f"Structure de réponse inattendue : {json_response}")
             return None
     else:
-        app.logger.error(f"Failed to receive valid response from OpenAI: {response.text}")
+        # Log de l'erreur de réponse de l'API pour aider à identifier le problème
+        app.logger.error(f"Échec de la réception d'une réponse valide d'OpenAI : {response.text}")
         return None
-
-
-
-
-
 
 
 
@@ -525,11 +527,11 @@ def propose_event():
     user_input = request.json.get('question', '')
     
     # Premier appel pour tenter d'extraire un événement
-    action_to_propose = ask_chatgpt(user_input, "record")
+    action_to_propose = ask_gpt_mood(user_input, "record")
 
     # Si aucun événement clair n'est détecté, utilisez le second prompt pour guider l'utilisateur
     if not action_to_propose or action_to_propose in ["Aucun événement détecté", ""]:
-        guidance_response = ask_chatgpt(user_input, "guidance")
+        guidance_response = ask_gpt_mood(user_input, "guidance")
         return jsonify({"status": "info", "message": guidance_response or "Veuillez fournir plus de détails sur l'événement."})
     
     # Si un événement est détecté
