@@ -573,7 +573,7 @@ def save_event(user_id, description):
 
 
 
-# ! ajout EXTENSION 2 affichage de list ---------------
+# ! ajout EXTENSION 3 affichage de list ---------------
 
 @app.route('/get_actions', methods=['GET'])
 @jwt_required()
@@ -595,7 +595,6 @@ def get_actions():
         "Avant-Hier": []
     }
     
-    # Query events for the last three days
     events = PositiveEvent.query.filter(
         PositiveEvent.user_id == user.id,
         PositiveEvent.date >= day_before_yesterday
@@ -611,6 +610,7 @@ def get_actions():
             grouped_actions["Avant-Hier"].append(event.description)
     
     return jsonify(grouped_actions)
+
 
 
 # ! fin list
