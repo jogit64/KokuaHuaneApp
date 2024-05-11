@@ -9,16 +9,16 @@
     "presence_penalty": 0.0
   },
   "record": {
-    "model": "gpt-4",
-    "instructions": "Déterminez si l'utilisateur veut 'enregistrer' un événement, si un événement clair basé sur l'input est détectable, formulez-le clairement. Sinon, indiquez 'test'.",
-    "max_tokens": 50,
+    "model": "gpt-4-turbo",
+    "instructions": "Déterminez si l'utilisateur veut 'enregistrer' un événement. Si un événement clair basé sur l'input est détectable, reformulez-le clairement à la seconde personne. Sinon, indiquez 'flag'. Voici des exemples de transformations attendues : \n- Input : 'Note que mon ange gardien m'a fait un signe' -> Sortie : 'Ton ange gardien t'a fait un signe'\n- Input : 'J'ai fait du vélo ce matin' -> Sortie : 'Tu as fait du vélo ce matin'\n- Input : 'Note que j'ai nourri les oiseaux' -> Sortie : 'Tu as nourri les oiseaux'.",
+    "max_tokens": 100,
     "top_p": 1.0,
-    "temperature": 0.3
+    "temperature": 0.2
   },
   "guidance": {
     "model": "gpt-4-turbo",
     "instructions": "Si aucune action claire n'est formulée, guidez l'utilisateur sur comment reformuler pour clarifier l'événement ou demandez plus de détails.",
-    "max_tokens": 100,
+    "max_tokens": 150,
     "top_p": 1.0,
     "temperature": 0.5
   },
