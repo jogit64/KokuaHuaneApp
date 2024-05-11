@@ -575,7 +575,7 @@ def save_event(user_id, description):
 
 # ! ajout EXTENSION 2 affichage de list ---------------
 
-@app.route('/get_actions', methods=['GET'])
+@app.route('/get_actions', methods=['POST'])
 @jwt_required()
 def get_actions():
     user_email = get_jwt_identity()
