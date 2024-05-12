@@ -65,9 +65,9 @@ CORS(app, supports_credentials=True, resources={
     r"/interact": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]},
     r"/propose_event": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]}, 
     r"/confirm_event": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]},
-    r"/get_actions": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]} 
-    r"/update_event": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]} 
-    r"/delete_event": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]} 
+    r"/get_actions": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]}, 
+    r"/update_event": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]}, 
+    r"/delete_event": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]}, 
     r"/add_to_favorites": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]} 
 })
 
