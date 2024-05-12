@@ -602,12 +602,13 @@ def get_actions():
     
     for event in events:
         event_date = event.date.date()
+        event_info = {"id": event.id, "description": event.description}
         if event_date == today:
-            grouped_actions["Aujourd'hui"].append(event.description)
+            grouped_actions["Aujourd'hui"].append(event_info)
         elif event_date == yesterday:
-            grouped_actions["Hier"].append(event.description)
+            grouped_actions["Hier"].append(event_info)
         elif event_date == day_before_yesterday:
-            grouped_actions["Avant-Hier"].append(event.description)
+            grouped_actions["Avant-Hier"].append(event_info)
     
     return jsonify(grouped_actions)
 
