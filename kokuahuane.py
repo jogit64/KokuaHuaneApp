@@ -58,21 +58,25 @@ jwt = JWTManager(app)
 
 
 # Configuration de CORS pour permettre les requêtes cross-origin.
-CORS(app, supports_credentials=True, resources={
-    r"/ask": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]},
-    r"/login": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]},
-    r"/register": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]},  
-    r"/interact": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]},
-    r"/propose_event": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]}, 
-    r"/confirm_event": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]},
-    r"/get_actions": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]}, 
-    r"/update_event": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]}, 
-    r"/delete_event": {
-        "origins": ["https://kokua.fr", "https://www.kokua.fr"],
-        "methods": ["DELETE"]  # Assurez-vous d'ajouter les méthodes autorisées ici
-    },
-    r"/add_to_favorites": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]} 
-})
+# CORS(app, supports_credentials=True, resources={
+#     r"/ask": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]},
+#     r"/login": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]},
+#     r"/register": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]},  
+#     r"/interact": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]},
+#     r"/propose_event": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]}, 
+#     r"/confirm_event": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]},
+#     r"/get_actions": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]}, 
+#     r"/update_event": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]}, 
+#     r"/delete_event": {
+#         "origins": ["https://kokua.fr", "https://www.kokua.fr"],
+#         "methods": ["DELETE"]  # Assurez-vous d'ajouter les méthodes autorisées ici
+#     },
+#     r"/add_to_favorites": {"origins": ["https://kokua.fr", "https://www.kokua.fr"]} 
+# })
+
+
+
+CORS(app, supports_credentials=True, origins=["https://kokua.fr", "https://www.kokua.fr"], allow_headers=["Authorization", "Content-Type"], methods=["GET", "POST", "DELETE", "OPTIONS"])
 
 
 # Modèle utilisateur pour SQLAlchemy.
