@@ -616,6 +616,66 @@ def get_actions():
 
 # ! fin list
 
+# ! ajout fonction d'édition sur list
+
+@app.route('/update_event/<int:event_id>', methods=['POST'])
+@jwt_required()
+def update_event(event_id):
+    user_email = get_jwt_identity()
+    user = User.query.filter_by(email=user_email).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    event = PositiveEvent.query.filter_by(id=event_id, user_id=user.id).first()
+    if not event:
+        return jsonify({"error": "Event not found"}), 404
+
+    new_description = request.json.get('description', None)
+    if new_description:
+        event.description = new_description
+        db.session.commit()
+        return jsonify({"success": "Event updated"}), 200
+    return jsonify({"error": "No description provided"}), 400
+
+
+
+@app.route('/delete_event/<int:event_id>', methods=['DELETE'])
+@jwt_required()
+def delete_event(event_id):
+    user_email = get_jwt_identity()
+    user = User.query.filter_by(email=user_email).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    event = PositiveEvent.query.filter_by(id=event_id, user_id=user.id).first()
+    if event:
+        db.session.delete(event)
+        db.session.commit()
+        return jsonify({"success": "Event deleted"}), 200
+    return jsonify({"error": "Event not found"}), 404
+
+
+
+
+@app.route('/add_to_favorites/<int:event_id>', methods=['POST'])
+@jwt_required()
+def add_to_favorites(event_id):
+    user_email = get_jwt_identity()
+    user = User.query.filter_by(email=user_email).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    event = PositiveEvent.query.filter_by(id=event_id, user_id=user.id).first()
+    if event:
+        event.category = 'favorite'
+        db.session.commit()
+        return jsonify({"success": "Event added to favorites"}), 200
+    return jsonify({"error": "Event not found"}), 404
+
+
+
+# ! fin ajout fonction d'édition sur list
+
 
 # Point d'entrée pour décider d'exécuter l'application ou le test
 if __name__ == "__main__":
