@@ -609,18 +609,26 @@ def get_actions():
         PositiveEvent.user_id == user.id,
         PositiveEvent.date >= day_before_yesterday
     ).all()
+
+    # Obtenir les favoris de l'utilisateur
+    favorite_event_ids = {fav.event_id for fav in Favorite.query.filter_by(user_id=user.id).all()}
     
     for event in events:
         event_date = event.date.date()
-        event_info = {"id": event.id, "description": event.description}
-        if event_date == today:
+        event_info = {
+            "id": event.id,
+            "description": event.description,
+            "isFavorite": event.id in favorite_event_ids  # Ajouter la propriété isFavorite
+        }
+        if (event_date == today):
             grouped_actions["Aujourd'hui"].append(event_info)
-        elif event_date == yesterday:
+        elif (event_date == yesterday):
             grouped_actions["Hier"].append(event_info)
-        elif event_date == day_before_yesterday:
+        elif (event_date == day_before_yesterday):
             grouped_actions["Avant-Hier"].append(event_info)
     
     return jsonify(grouped_actions)
+
 
 
 
