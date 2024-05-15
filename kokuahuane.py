@@ -667,10 +667,15 @@ def delete_event(event_id):
 
     event = PositiveEvent.query.filter_by(id=event_id, user_id=user.id).first()
     if event:
+        # Supprimer d'abord toutes les entrées de favoris associées à cet événement
+        Favorite.query.filter_by(event_id=event.id).delete()
+
+        # Ensuite, supprimer l'événement lui-même
         db.session.delete(event)
         db.session.commit()
         return jsonify({"success": "Event deleted"}), 200
     return jsonify({"error": "Event not found"}), 404
+
 
 
 
