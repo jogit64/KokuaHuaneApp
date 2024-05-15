@@ -583,7 +583,7 @@ def save_event(user_id, description):
 
 
 
-# ! ajout EXTENSION 3 affichage de list ---------------
+# ! EXTENSION 3 affichage de list ---------------
 
 @app.route('/get_actions', methods=['GET'])
 @jwt_required()
@@ -683,8 +683,57 @@ def add_to_favorites(event_id):
     return jsonify({"error": "Event not found"}), 404
 
 
+# * fin ajout fonction d'édition sur list
 
-# ! fin ajout fonction d'édition sur list
+
+# ! EXTENSION 4 gestion favoris de list ---------------
+
+
+class Favorite(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('positive_event.id'), nullable=False)
+    user = db.relationship('User', backref='favorites')
+    event = db.relationship('PositiveEvent')
+
+
+@app.route('/add_to_favorites/<int:event_id>', methods=['POST'])
+@jwt_required()
+def add_to_favorites(event_id):
+    user_email = get_jwt_identity()
+    user = User.query.filter_by(email=user_email).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    event = PositiveEvent.query.filter_by(id=event_id).first()
+    if not event:
+        return jsonify({"error": "Event not found"}), 404
+
+    # Vérifier si l'événement est déjà en favori
+    if Favorite.query.filter_by(user_id=user.id, event_id=event.id).first():
+        return jsonify({"error": "Event already in favorites"}), 409
+
+    new_favorite = Favorite(user_id=user.id, event_id=event.id)
+    db.session.add(new_favorite)
+    db.session.commit()
+    return jsonify({"success": "Event added to favorites"}), 200
+
+@app.route('/remove_from_favorites/<int:event_id>', methods=['POST'])
+@jwt_required()
+def remove_from_favorites(event_id):
+    user_email = get_jwt_identity()
+    user = User.query.filter_by(email=user_email).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    favorite = Favorite.query.filter_by(user_id=user.id, event_id=event_id).first()
+    if not favorite:
+        return jsonify({"error": "Favorite not found"}), 404
+
+    db.session.delete(favorite)
+    db.session.commit()
+    return jsonify({"success": "Favorite removed"}), 200
+
 
 
 # Point d'entrée pour décider d'exécuter l'application ou le test
