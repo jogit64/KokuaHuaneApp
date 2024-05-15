@@ -667,20 +667,7 @@ def delete_event(event_id):
 
 
 
-@app.route('/add_to_favorites/<int:event_id>', methods=['POST'])
-@jwt_required()
-def add_to_favorites(event_id):
-    user_email = get_jwt_identity()
-    user = User.query.filter_by(email=user_email).first()
-    if not user:
-        return jsonify({"error": "User not found"}), 404
 
-    event = PositiveEvent.query.filter_by(id=event_id, user_id=user.id).first()
-    if event:
-        event.category = 'favorite'
-        db.session.commit()
-        return jsonify({"success": "Event added to favorites"}), 200
-    return jsonify({"error": "Event not found"}), 404
 
 
 # * fin ajout fonction d'édition sur list
