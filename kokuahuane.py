@@ -544,7 +544,7 @@ def propose_event():
     logging.debug(f"Detected event response: {event_detection}")  # Log pour observer la réponse de détection d'événement
 
     # Vérifie si un événement clair est détecté
-    if not event_detection or event_detection.strip() == "flag":
+    if not event_detection or event_detection.strip().lower() == "flag":
         # Directement retourner un message invitant l'utilisateur à fournir plus de détails
         return jsonify({"status": "info", "message": "Aucun événement spécifique n'a été identifié. Pouvez-vous donner plus de détails pour que nous puissions vous aider davantage ?"})
     else:

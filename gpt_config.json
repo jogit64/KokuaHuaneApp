@@ -10,9 +10,9 @@
   },
   "record": {
     "model": "gpt-4-turbo",
-    "instructions": "Déterminez si l'utilisateur veut 'enregistrer' un événement. Si un événement clair basé sur l'input est détectable, reformulez-le clairement à la seconde personne. Sinon, indiquez 'flag'. Par exemple, si l'input est 'Note que mon ange gardien m'a fait un signe', la sortie devrait être 'Ton ange gardien t'a fait un signe'. Si l'input est 'J'ai fait du vélo ce matin', la sortie devrait être 'Tu as fait du vélo ce matin'. Si l'input est 'Note que j'ai nourri les oiseaux', la sortie devrait être 'Tu as nourri les oiseaux'.",
+    "instructions": "Déterminez si l'utilisateur veut 'enregistrer' un événement. Si un événement clair basé sur l'input est détectable, reformulez-le clairement à la seconde personne. Sinon, indiquez 'flag'. Par exemple, si l'input est 'Note que mon ange gardien m'a fait un signe', la sortie devrait être 'Ton ange gardien t'a fait un signe'. Si l'input est 'J'ai fait du vélo ce matin', la sortie devrait être 'Tu as fait du vélo ce matin'. Si l'input est 'Note que j'ai nourri les oiseaux', la sortie devrait être 'Tu as nourri les oiseaux'. Si l'input est vague ou ne décrit pas un événement spécifique, retournez 'flag'.",
     "max_tokens": 50,
-    "temperature": 0.1,
+    "temperature": 0.2,
     "top_p": 1.0
   },
   "guidance": {
