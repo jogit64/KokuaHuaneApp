@@ -736,6 +736,19 @@ def remove_from_favorites(event_id):
 
 
 
+
+# ! EXTENSION 5 gestion token renouvellement ---------------
+
+@app.route('/check_session', methods=['GET'])
+@jwt_required()
+def check_session():
+    current_user = get_jwt_identity()
+    return jsonify(logged_in=True, user=current_user), 200
+
+
+
+
+
 # Point d'entrée pour décider d'exécuter l'application ou le test
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == 'test':
