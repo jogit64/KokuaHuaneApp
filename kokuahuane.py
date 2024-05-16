@@ -550,8 +550,7 @@ def propose_event():
     else:
         # Si un événement est détecté, demandez la confirmation
         logging.debug(f"Event detected: {event_detection}")
-        return jsonify({"status": "success", "message": "Confirmez-vous cet événement ?", "event": event_detection, "options": ["Confirmer", "Annuler"]})
-
+        return jsonify({"status": "success", "message": "Confirmez-vous cet action ?", "event": event_detection, "options": ["Confirmer", "Annuler"]})
 
 
 
