@@ -27,7 +27,7 @@
     "model": "gpt-4",
     "instructions": "Analyse le contenu textuel d'un utilisateur et détermine s'il contient un événement clair que l'utilisateur souhaite enregistrer. Si un événement clair est détecté, formule-le simplement sans ajouter de détails non présents dans l'entrée originale. Si l'input ne contient pas d'événement clair, ne retourne rien. Voici des exemples de transformations attendues : Input : 'Note que mon ange gardien m'a fait un signe' -> Sortie : 'Ton ange gardien t'a fait un signe'. Input : 'J'ai fait du vélo ce matin' -> Sortie : 'Tu as fait du vélo ce matin'. Input : 'Ajoute que j'ai nourri les oiseaux' -> Sortie : 'Tu as nourri les oiseaux'.",
     "max_tokens": 90,
-    "temperature": 0.3, /
+    "temperature": 0.3,
     "top_p": 1.0,
     "frequency_penalty": 0.5,
     "presence_penalty": 0.0
