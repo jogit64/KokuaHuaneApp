@@ -556,14 +556,17 @@ def propose_event():
 
 
 
-    # Vérifie si un événement a été détecté
-    if event_detection.strip():
-        # Si un événement est détecté, demandez la confirmation
+    # Vérifie si un événement a été détecté et est bien formulé
+    if event_detection:
+        # Assurer la cohérence dans la formulation
+        if not event_detection.startswith("Tu "):
+            event_detection = "Tu " + event_detection[0].lower() + event_detection[1:]
+
         logging.debug(f"Event detected: {event_detection}")
         return jsonify({"status": "success", "message": "Confirmez-vous cet événement ?", "event": event_detection, "options": ["Confirmer", "Annuler"]})
     else:
-        # Aucun événement clair n'a été identifié
         return jsonify({"status": "info", "message": "Je n'ai pas compris ce que vous souhaitez enregistrer. Pouvez-vous donner plus de détails ?"})
+
 
 
 
