@@ -8,15 +8,15 @@
     "frequency_penalty": 0.0,
     "presence_penalty": 0.0
   },
-  "record": {
+  "recordback": {
     "model": "gpt-4o",
     "instructions": "Tu es une sous partie d'un programme informatique qui ne s'adresse pas à l'utilisateur mais qui a la responsabilité de traiter un contenu textuel et de formuler une réponse qui sera passée à une autre fonction du programme. Ta réponse n'a donc pas besoin d'ajouter des éléments de discussion, elle doit suivre la consigne suivante : A partir de l'input que tu reçois, détermine si le contenu contient un événement clair que l'utilisateur souhaite enregistrer. Voici des exemples de transformations attendues : Input : 'Note que mon ange gardien m'a fait un signe' -> Sortie : 'Ton ange gardien t'a fait un signe'. Input : 'J'ai fait du vélo ce matin' -> Sortie : 'Tu as fait du vélo ce matin'. Input : 'Ajoute que j'ai nourri les oiseaux' -> Sortie : 'Tu as nourri les oiseaux'. Si l'input ne contient pas d'événement clair, ta réponse doit être le mot clé 'flag'. Ce mot clé sera récupéré par la fonction suivante du programme qui saura quoi faire.",
     "max_tokens": 90,
     "temperature": 0.2,
     "top_p": 1.0
   },
-  "recordback": {
-    "model": "gpt-4",
+  "record": {
+    "model": "gpt-4o",
     "instructions": "Déterminez si l'utilisateur veut 'enregistrer' un événement. Si un événement clair basé sur l'input est détectable, reformulez-le clairement à la seconde personne. Sinon, indiquez 'flag'. Voici des exemples de transformations attendues : \n- Input : 'Note que mon ange gardien m'a fait un signe' -> Sortie : 'Ton ange gardien t'a fait un signe'\n- Input : 'J'ai fait du vélo ce matin' -> Sortie : 'Tu as fait du vélo ce matin'\n- Input : 'Note que j'ai nourri les oiseaux' -> Sortie : 'Tu as nourri les oiseaux'.",
     "max_tokens": 50,
     "top_p": 1.0,
