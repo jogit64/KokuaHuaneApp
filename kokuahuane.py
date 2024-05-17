@@ -543,15 +543,27 @@ def propose_event():
 
     logging.debug(f"Detected event response: {event_detection}")  # Log pour observer la réponse de détection d'événement
 
-    # Vérifie si un événement clair est détecté
-    # if not event_detection or event_detection.strip().lower() == "flag":
-    if event_detection.strip().lower() == "flag":
-        # Directement retourner un message invitant l'utilisateur à fournir plus de détails
-        return jsonify({"status": "info", "message": "Aucun événement spécifique n'a été identifié. Pouvez-vous donner plus de détails pour que nous puissions vous aider davantage ?"})
-    else:
+    # # Vérifie si un événement clair est détecté
+    # # if not event_detection or event_detection.strip().lower() == "flag":
+    # if event_detection.strip().lower() == "flag":
+    #     # Directement retourner un message invitant l'utilisateur à fournir plus de détails
+    #     return jsonify({"status": "info", "message": "Aucun événement spécifique n'a été identifié. Pouvez-vous donner plus de détails pour que nous puissions vous aider davantage ?"})
+    # else:
+    #     # Si un événement est détecté, demandez la confirmation
+    #     logging.debug(f"Event detected: {event_detection}")
+    #     return jsonify({"status": "success", "message": "Confirmez-vous cet évènnement ?", "event": event_detection, "options": ["Confirmer", "Annuler"]})
+
+
+
+
+    # Vérifie si un événement a été détecté
+    if event_detection.strip():
         # Si un événement est détecté, demandez la confirmation
         logging.debug(f"Event detected: {event_detection}")
-        return jsonify({"status": "success", "message": "Confirmez-vous cet évènnement ?", "event": event_detection, "options": ["Confirmer", "Annuler"]})
+        return jsonify({"status": "success", "message": "Confirmez-vous cet événement ?", "event": event_detection, "options": ["Confirmer", "Annuler"]})
+    else:
+        # Aucun événement clair n'a été identifié
+        return jsonify({"status": "info", "message": "Je n'ai pas compris ce que vous souhaitez enregistrer. Pouvez-vous donner plus de détails ?"})
 
 
 
